@@ -7,21 +7,19 @@ with io.open(path.join(here, 'requirements.txt'), encoding='utf-8') as f:
     requires = f.read().split()
 
 setup(
-    name='cufflinks',
-    version='0.17.4',
-    description='Productivity Tools for Plotly + Pandas',
-    author='Jorge Santos',
-    author_email='santos.jorge@gmail.com',
+    name='blot',
+    version='0.0.1',
+    description='基于cufflinks的绘图工具',
+    author='bowaer',
+    author_email='cb229435444@outlook.com',
     license='MIT',
     keywords=['pandas', 'plotly', 'plotting'],
-    url='https://github.com/santosjorge/cufflinks',
-    packages=['cufflinks'],
-    package_data={'cufflinks': ['../helper/*.json']},
+    url='https://github.com/lotcher/blot',
+    packages=['blot'],
+    package_data={'blot': ['../helper/*.json']},
     include_package_data=True,
     install_requires=requires,
     classifiers=[
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 3',
     ],
     zip_safe=False

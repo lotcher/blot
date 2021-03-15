@@ -23,26 +23,26 @@ from .plotlytools import *
 from plotly.graph_objs import *
 from .colors import cnames, get_colorscale
 from .utils import pp
-from .tools import subplots,scatter_matrix,figures,getLayout,getThemes,getTheme
+from .tools import subplots, scatter_matrix, figures, getLayout, getThemes, getTheme
 from .extract import to_df
-from .auth import set_config_file,get_config_file
+from .auth import set_config_file, get_config_file
 from .quant_figure import QuantFig
-from .offline import is_offline,go_offline,go_online
+from .offline import is_offline, go_offline, go_online
 from .version import __version__
 
 try:
-	if get_config_file()['offline']:
-		go_offline()
-	else:
-		go_online()
+    if get_config_file()['offline']:
+        go_offline()
+    else:
+        go_online()
 except:
-	pass
+    pass
 
 # User Defined Colors
 
-try: 
-	colors.cnames = utils.merge_dict(colors.cnames,auth.get_user_colors())
-	colors._scales_names = utils.merge_dict(colors._scales_names,auth.get_user_scales())
-	themes.THEMES = utils.merge_dict(themes.THEMES,auth.get_user_themes())
+try:
+    colors.cnames = utils.merge_dict(colors.cnames, auth.get_user_colors())
+    colors._scales_names = utils.merge_dict(colors._scales_names, auth.get_user_scales())
+    themes.THEMES = utils.merge_dict(themes.THEMES, auth.get_user_themes())
 except:
-	pass
+    pass

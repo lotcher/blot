@@ -16,7 +16,7 @@ jobs:
           command: 'sudo pip install nose coverage'
       - run:
           name: Run tests
-          command: 'nosetests -xv tests.py --with-coverage --cover-package=cufflinks'
+          command: 'nosetests -xv tests.py --with-coverage --cover-package=blot'
 
   python-3.5-core:
     docker:
@@ -34,7 +34,7 @@ jobs:
           command: 'sudo pip install nose coverage'
       - run:
           name: Run tests
-          command: 'nosetests -xv tests.py --with-coverage --cover-package=cufflinks'
+          command: 'nosetests -xv tests.py --with-coverage --cover-package=blot'
 
 workflows:
   version: 2
