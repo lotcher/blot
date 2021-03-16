@@ -71,6 +71,32 @@ __LAYOUT_KWARGS = []
                                      __LAYOUT_AXIS_X, __LAYOUT_AXIS_Y]]
 
 
+def add_ref_line(values, direction='vertical', color='red', width=2):
+    """
+    根据给出的取值列表，返回对应的参考线对象(go.layout.Shape)
+    """
+    import plotly.graph_objs as go
+
+    def kwargs(v):
+        return {
+            'x0': v, 'y0': 0, 'x1': v, 'y1': 1, 'yref': 'paper',
+        } if direction == 'vertical' else {
+            'x0': 0, 'y0': v, 'x1': 1, 'y1': v, 'xref': 'paper',
+        }
+
+    return [
+        go.layout.Shape(
+            **kwargs(v),
+            type="line",
+            line=dict(
+                color=color,
+                width=width
+            )
+        )
+        for v in values
+    ]
+
+
 def getTheme(theme=None):
     """
     Returns a theme definition.

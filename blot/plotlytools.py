@@ -210,7 +210,8 @@ def _iplot(
         ztitle='', theme=None, colors=None, colorscale=None, fill=False, width=None,
         dash='solid', mode='', interpolation='linear', symbol='circle', size=12, barmode='', sortbars=False,
         bargap=None, bargroupgap=None, bins=None, histnorm='', histfunc='count',
-        orientation='v', boxpoints=False, annotations=None, keys=False, bestfit=False, bestfit_colors=None,
+        orientation='v', boxpoints=False, annotations=None, vlines=None, hlines=None,
+        keys=False, bestfit=False, bestfit_colors=None,
         mean=False, mean_colors=None, categories='', x='', y='', z='', text='', gridcolor=None,
         zerolinecolor=None, margin=None, labels=None, values=None, secondary_y='', secondary_y_title='',
         subplots=False, shape=None, error_x=None, error_y=None, error_type='data',
@@ -411,6 +412,10 @@ def _iplot(
         annotations : dictionary
             Dictionary of annotations
             {x_point : text}
+        vlines: 横坐标列表
+            需要绘制垂直（平行于y轴）参考线的x取值列表
+        hlines: 纵坐标列表
+            需要绘制水平（平行于x轴）参考线的x取值列表
         keys : list of columns
             List of columns to chart.
             Also can be used for custom sorting.
@@ -667,7 +672,10 @@ def _iplot(
                 Only valid when asImage=True
     """
     # Valid Kwargs
-    valid_kwargs = ['color', 'opacity', 'column', 'columns', 'labels', 'text', 'world_readable', 'colorbar']
+    valid_kwargs = [
+        'color', 'opacity', 'column', 'columns', 'labels', 'text', 'world_readable', 'colorbar',
+        'vline_color', 'vline_width', 'hline_color', 'hline_width'
+    ]
     BUBBLE_KWARGS = ['abs_size']
     TRACE_KWARGS = ['hoverinfo', 'connectgaps']
     HEATMAP_SURFACE_KWARGS = ['center_scale', 'zmin', 'zmax']
@@ -700,7 +708,7 @@ def _iplot(
     dict_modifiers = {}
 
     for k in dict_modifiers_keys:
-        dict_modifiers[k] = kwargs_from_keyword(kwargs, {}, k, True)
+        dict_modifiers[k] = kwargs_from_keyword(kwargs, {}, k, False)
 
     for key in list(kwargs.keys()):
         if key not in valid_kwargs:
@@ -752,7 +760,7 @@ def _iplot(
     if not layout:
         l_kwargs = dict([(k, kwargs[k]) for k in tools.__LAYOUT_KWARGS if k in kwargs])
         if annotations:
-            ann_kwargs = check_kwargs(kwargs, tools.__ANN_KWARGS, clean_origin=True)
+            ann_kwargs = check_kwargs(kwargs, tools.__ANN_KWARGS, clean_origin=False)
             annotations = tools.get_annotations(self.copy(), annotations, kind=kind, theme=theme, **ann_kwargs)
 
         layout = tools.getLayout(
@@ -763,6 +771,17 @@ def _iplot(
         )
     elif isinstance(layout, Layout):
         layout = layout.to_plotly_json()
+
+    layout['shapes'] = layout.get('shapes', [])
+    layout['shapes'] += tools.add_ref_line(
+        vlines or [], direction='vertical',
+        color=kwargs.get('vline_color', 'red'), width=kwargs.get('vline_width', 2)
+    )
+
+    layout['shapes'] += tools.add_ref_line(
+        hlines or [], direction='horizontal',
+        color=kwargs.get('hline_color', 'red'), width=kwargs.get('hline_width', 2)
+    )
 
     if not data:
         if categories and kind not in ('violin'):
