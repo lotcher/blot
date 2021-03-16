@@ -666,8 +666,6 @@ def _iplot(
                 Increase the resolution of the image by `scale` amount
                 Only valid when asImage=True
     """
-    from datetime import datetime
-    start = datetime.now().timestamp()
     # Valid Kwargs
     valid_kwargs = ['color', 'opacity', 'column', 'columns', 'labels', 'text', 'world_readable', 'colorbar']
     BUBBLE_KWARGS = ['abs_size']
@@ -1210,7 +1208,6 @@ def _iplot(
     if as_figure:
         return Figure(figure)
     else:
-        print(f'参数处理时间: {datetime.now().timestamp()-start}s')
         return iplot(
             figure, validate=validate, filename=filename,
             as_image=as_image, as_url=as_url, as_plot=as_plot,

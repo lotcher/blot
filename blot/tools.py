@@ -522,7 +522,7 @@ def get_annotations(df, annotations, kind='lines', theme=None, **kwargs):
             )
 
             del annotation['title']
-            local_list.append(ann)
+            local_list.append(annotation)
 
         elif 'x' in annotation:
             ann = dict(
