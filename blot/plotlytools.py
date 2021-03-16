@@ -205,17 +205,18 @@ def _to_iplot(self, colors=None, colorscale=None, kind='scatter', mode='lines', 
     return lines_plotly
 
 
-def _iplot(self, kind='scatter', data=None, layout=None, filename='', sharing=None, title='', xTitle='', yTitle='',
-           zTitle='', theme=None, colors=None, colorscale=None, fill=False, width=None,
-           dash='solid', mode='', interpolation='linear', symbol='circle', size=12, barmode='', sortbars=False,
-           bargap=None, bargroupgap=None, bins=None, histnorm='',
-           histfunc='count', orientation='v', boxpoints=False, annotations=None, keys=False, bestfit=False,
-           bestfit_colors=None, mean=False, mean_colors=None, categories='', x='', y='', z='', text='', gridcolor=None,
-           zerolinecolor=None, margin=None, labels=None, values=None, secondary_y='', secondary_y_title='',
-           subplots=False, shape=None, error_x=None,
-           error_y=None, error_type='data', locations=None, lon=None, lat=None, asFrame=False, asDates=False,
-           asFigure=False,
-           asImage=False, dimensions=None, asPlot=False, asUrl=False, online=None, **kwargs):
+def _iplot(
+        self, kind='scatter', data=None, layout=None, filename='', title='', xtitle='', ytitle='',
+        ztitle='', theme=None, colors=None, colorscale=None, fill=False, width=None,
+        dash='solid', mode='', interpolation='linear', symbol='circle', size=12, barmode='', sortbars=False,
+        bargap=None, bargroupgap=None, bins=None, histnorm='', histfunc='count',
+        orientation='v', boxpoints=False, annotations=None, keys=False, bestfit=False, bestfit_colors=None,
+        mean=False, mean_colors=None, categories='', x='', y='', z='', text='', gridcolor=None,
+        zerolinecolor=None, margin=None, labels=None, values=None, secondary_y='', secondary_y_title='',
+        subplots=False, shape=None, error_x=None, error_y=None, error_type='data',
+        locations=None, lon=None, lat=None, as_frame=False, as_dates=False,
+        as_figure=False, as_image=False, dimensions=None, as_plot=False, as_url=False, **kwargs
+):
     """
     Returns a plotly chart either as inline chart, image of Figure object
 
@@ -249,19 +250,14 @@ def _iplot(self, kind='scatter', data=None, layout=None, filename='', sharing=No
             generated from the DataFrame.
         filename : string
             Filename to be saved as in plotly account
-        sharing : string
-            Sets the sharing level permission
-                public - anyone can see this chart
-                private - only you can see this chart
-                secret - only people with the link can see the chart
         title : string
             Chart Title
-        xTitle : string
+        xtitle : string
             X Axis Title
-        yTitle : string
+        ytitle : string
             Y Axis Title
                 zTitle : string
-        zTitle : string
+        ztitle : string
             Z Axis Title
             Applicable only for 3d charts
         theme : string
@@ -403,8 +399,8 @@ def _iplot(self, kind='scatter', data=None, layout=None, filename='', sharing=No
                 h
                 v
             Sets the orientation of the bars. If set to 'v', the length of each
- |          bar will run vertically. If set to 'h', the length of each bar will
- |          run horizontally
+            bar will run vertically. If set to 'h', the length of each bar will
+            run horizontally
             * Only valid when kind is 'histogram','bar' or 'box'
         boxpoints : string
             Displays data points in a box plot
@@ -474,15 +470,15 @@ def _iplot(self, kind='scatter', data=None, layout=None, filename='', sharing=No
                 'sqrt'
                 'continuous'
                 'continuous_percent'
-        asFrame : bool
+        as_frame : bool
             If true then the data component of Figure will
             be of Pandas form (Series) otherwise they will
             be index values
-        asDates : bool
+        as_dates : bool
             If true it truncates times from a DatetimeIndex
-        asFigure : bool
+        as_figure : bool
             If True returns plotly Figure
-        asImage : bool
+        as_image : bool
             If True it returns an Image (png)
             In ONLINE mode:
                 Image file is saved in the working directory
@@ -500,15 +496,12 @@ def _iplot(self, kind='scatter', data=None, layout=None, filename='', sharing=No
         dimensions : tuple(int,int)
             Dimensions for image / chart
                 (width,height)
-        asPlot : bool
+        as_plot : bool
             If True the chart opens in browser
-        asUrl : bool
+        as_url : bool
             If True the chart url/path is returned. No chart is displayed.
                 If Online : the URL is returned
                 If Offline : the local path is returned
-        online : bool
-            If True then the chart/image is rendered on the server
-            even when running in offline mode.
 
         Other Kwargs
         ============
@@ -673,28 +666,36 @@ def _iplot(self, kind='scatter', data=None, layout=None, filename='', sharing=No
                 Increase the resolution of the image by `scale` amount
                 Only valid when asImage=True
     """
-
+    from datetime import datetime
+    start = datetime.now().timestamp()
     # Valid Kwargs
     valid_kwargs = ['color', 'opacity', 'column', 'columns', 'labels', 'text', 'world_readable', 'colorbar']
     BUBBLE_KWARGS = ['abs_size']
     TRACE_KWARGS = ['hoverinfo', 'connectgaps']
     HEATMAP_SURFACE_KWARGS = ['center_scale', 'zmin', 'zmax']
     PIE_KWARGS = ['sort', 'pull', 'hole', 'textposition', 'textinfo', 'linecolor', 'linewidth', 'textcolor']
-    OHLC_KWARGS = ['up_color', 'down_color', 'open', 'high', 'low', 'close', 'volume', 'name', 'decreasing',
-                   'increasing']
-    SUBPLOT_KWARGS = ['horizontal_spacing', 'vertical_spacing',
-                      'specs', 'insets', 'start_cell', 'shared_xaxes', 'shared_yaxes', 'subplot_titles', 'shared_xaxis',
-                      'shared_yaxis']
+    OHLC_KWARGS = [
+        'up_color', 'down_color', 'open', 'high', 'low', 'close',
+        'volume', 'name', 'decreasing', 'increasing'
+    ]
+    SUBPLOT_KWARGS = [
+        'horizontal_spacing', 'vertical_spacing',
+        'specs', 'insets', 'start_cell', 'shared_xaxes',
+        'shared_yaxes', 'subplot_titles', 'shared_xaxis', 'shared_yaxis'
+    ]
     GEO_KWARGS = ['locationmode', 'locationsrc', 'geo', 'lon', 'lat']
-    ERROR_KWARGS = ['error_trace', 'error_values_minus', 'error_color', 'error_thickness',
-                    'error_width', 'error_opacity']
+    ERROR_KWARGS = [
+        'error_trace', 'error_values_minus', 'error_color',
+        'error_thickness', 'error_width', 'error_opacity'
+    ]
     EXPORT_KWARGS = ['display_image', 'scale']
     FF_DISTPLOT = ["group_labels", "bin_size", "curve_type", "rug_text", "show_hist", "show_curve", "show_rug"]
     FF_VIOLIN = ["data_header", "group_header", "show_rug", "sort"]
-    kwargs_list = [tools.__LAYOUT_KWARGS, BUBBLE_KWARGS, TRACE_KWARGS,
-                   OHLC_KWARGS, PIE_KWARGS, HEATMAP_SURFACE_KWARGS, SUBPLOT_KWARGS, GEO_KWARGS, ERROR_KWARGS,
-                   EXPORT_KWARGS,
-                   FF_DISTPLOT, FF_VIOLIN]
+    kwargs_list = [
+        tools.__LAYOUT_KWARGS, BUBBLE_KWARGS, TRACE_KWARGS,
+        OHLC_KWARGS, PIE_KWARGS, HEATMAP_SURFACE_KWARGS, SUBPLOT_KWARGS, GEO_KWARGS, ERROR_KWARGS,
+        EXPORT_KWARGS, FF_DISTPLOT, FF_VIOLIN
+    ]
     [valid_kwargs.extend(_) for _ in kwargs_list]
 
     dict_modifiers_keys = ['line']
@@ -712,27 +713,18 @@ def _iplot(self, kind='scatter', data=None, layout=None, filename='', sharing=No
         colors = kwargs['color'] if 'color' in kwargs else colors
     if isinstance(colors, str):
         colors = [colors]
-    opacity = kwargs['opacity'] if 'opacity' in kwargs else 0.8
-    if not dimensions:
-        dimensions = auth.get_config_file()['dimensions']
+    opacity = kwargs.get('opacity', 0.8)
 
-    # Get values from config theme
-    if theme is None:
-        theme = auth.get_config_file()['theme']
+    theme = theme or 'pearl'
+
     theme_config = tools.getTheme(theme)
-    if colorscale is None:
-        config_colorscale = auth.get_config_file()['colorscale']
-        if config_colorscale in ('dflt', None):
-            colorscale = theme_config['colorscale'] if 'colorscale' in theme_config else 'original'
-        else:
-            colorscale = config_colorscale
-    if width is None:
-        if kind != 'pie':
-            width = theme_config['linewidth'] if 'linewidth' in theme_config else 2
-    if margin is None:
-        margin = auth.get_config_file().get('margin', None)
 
-    # In case column was used instead of keys
+    colorscale = colorscale or theme_config.get('colorscale', 'dflt')
+
+    if width is None and kind != 'pie':
+        width = theme_config.get('linewidth', 2)
+
+    # 常见错误参数修正
     if 'column' in kwargs:
         keys = [kwargs['column']] if isinstance(kwargs['column'], str) else kwargs['column']
     if 'columns' in kwargs:
@@ -740,7 +732,8 @@ def _iplot(self, kind='scatter', data=None, layout=None, filename='', sharing=No
     kind = 'line' if kind == 'lines' else kind
 
     # Figure generators
-    def get_marker(marker={}):
+    def get_marker(marker):
+        marker = marker or {}
         if 'line' in dict_modifiers:
             if 'color' not in dict_modifiers['line']:
                 if 'linecolor' in kwargs:
@@ -764,11 +757,12 @@ def _iplot(self, kind='scatter', data=None, layout=None, filename='', sharing=No
             ann_kwargs = check_kwargs(kwargs, tools.__ANN_KWARGS, clean_origin=True)
             annotations = tools.get_annotations(self.copy(), annotations, kind=kind, theme=theme, **ann_kwargs)
 
-        layout = tools.getLayout(kind=kind, theme=theme, xTitle=xTitle, yTitle=yTitle, zTitle=zTitle, title=title,
-                                 barmode=barmode,
-                                 bargap=bargap, bargroupgap=bargroupgap, annotations=annotations, gridcolor=gridcolor,
-                                 dimensions=dimensions,
-                                 zerolinecolor=zerolinecolor, margin=margin, is3d='3d' in kind, **l_kwargs)
+        layout = tools.getLayout(
+            kind=kind, theme=theme, xTitle=xtitle, yTitle=ytitle, zTitle=ztitle, title=title,
+            barmode=barmode, bargap=bargap, bargroupgap=bargroupgap, annotations=annotations,
+            gridcolor=gridcolor, dimensions=dimensions, zerolinecolor=zerolinecolor,
+            margin=margin, is3d='3d' in kind, **l_kwargs
+        )
     elif isinstance(layout, Layout):
         layout = layout.to_plotly_json()
 
@@ -780,7 +774,7 @@ def _iplot(self, kind='scatter', data=None, layout=None, filename='', sharing=No
                 df = df.set_index(categories)
                 fig = df.figure(kind=kind, colors=colors, colorscale=colorscale, fill=fill, width=width,
                                 sortbars=sortbars, opacity=opacity,
-                                asDates=asDates, mode=mode, symbol=symbol, size=size, text=text, barmode=barmode,
+                                asDates=as_dates, mode=mode, symbol=symbol, size=size, text=text, barmode=barmode,
                                 orientation=orientation)
                 data = fig['data']
             else:
@@ -790,11 +784,11 @@ def _iplot(self, kind='scatter', data=None, layout=None, filename='', sharing=No
                 for _ in _keys:
                     __ = self[self[categories] == _].copy()
                     if text:
-                        _text = __[text] if asFrame else __[text].values
-                    _x = __[x] if asFrame else __[x].values
-                    _y = __[y] if asFrame else __[y].values
+                        _text = __[text] if as_frame else __[text].values
+                    _x = __[x] if as_frame else __[x].values
+                    _y = __[y] if as_frame else __[y].values
                     if z:
-                        _z = __[z] if asFrame else __[z].values
+                        _z = __[z] if as_frame else __[z].values
                     if 'bubble' in kind:
                         rg = __[size].values
                         rgo = self[size].values
@@ -854,7 +848,7 @@ def _iplot(self, kind='scatter', data=None, layout=None, filename='', sharing=No
                 data = df.to_iplot(colors=colors, colorscale=colorscale, kind=kind, interpolation=interpolation,
                                    fill=fill, width=width, dash=dash, sortbars=sortbars, keys=keys,
                                    bestfit=bestfit, bestfit_colors=bestfit_colors, mean=mean, mean_colors=mean_colors,
-                                   asDates=asDates, mode=mode, symbol=symbol, size=size,
+                                   asDates=as_dates, mode=mode, symbol=symbol, size=size,
                                    text=text, **kwargs)
                 trace_kw = check_kwargs(kwargs, TRACE_KWARGS)
                 for trace in data:
@@ -1167,35 +1161,20 @@ def _iplot(self, kind='scatter', data=None, layout=None, filename='', sharing=No
                 data = fig['data']
                 layout = tools.merge_dict(layout, fig['layout'])
 
-    ## Sharing Values
-    if all(['world_readable' in kwargs, sharing is None]):
-        sharing = kwargs['world_readable']
-    if isinstance(sharing, bool):
-        if sharing:
-            sharing = 'public'
-        else:
-            sharing = 'private'
-    if sharing is None:
-        sharing = auth.get_config_file()['sharing']
+    filename = filename or title or 'Plotly Playground {0}'.format(time.strftime("%Y-%m-%d %H:%M:%S"))
 
-    if not filename:
-        if title:
-            filename = title
-        else:
-            filename = 'Plotly Playground {0}'.format(time.strftime("%Y-%m-%d %H:%M:%S"))
+    # Figure define
+    figure = {
+        'data': data, 'layout': layout
+    }
 
-    ## Figure defintion
-    figure = {}
-    figure['data'] = data
-    figure['layout'] = layout
-
-    ## Check secondary axis
+    # Check secondary axis
     if secondary_y:
         figure = tools._set_axis(figure, secondary_y, side='right')
         if secondary_y_title:
             figure.layout.yaxis2.title = secondary_y_title
 
-    ## Error Bars
+    # Error Bars
     if kind in ('scatter', 'bar', 'barh', 'lines', 'line'):
         if any([error_x, error_y]):
             def set_error(axis, **kwargs):
@@ -1210,8 +1189,8 @@ def _iplot(self, kind='scatter', data=None, layout=None, filename='', sharing=No
             if error_y:
                 kw['values'] = error_y
                 figure = set_error('y', **kw)
-    ## Subplots
 
+    # Subplots
     if subplots:
         fig = tools.strip_figures(figure)
         kw = check_kwargs(kwargs, SUBPLOT_KWARGS)
@@ -1225,15 +1204,18 @@ def _iplot(self, kind='scatter', data=None, layout=None, filename='', sharing=No
                 kw['subplot_titles'] = kwargs['subplot_titles']
         figure = tools.subplots(fig, shape, base_layout=layout, theme=theme, **kw)
 
-    ## Exports
+    # Exports
     validate = False if 'shapes' in layout else validate
 
-    if asFigure:
+    if as_figure:
         return Figure(figure)
     else:
-        return iplot(figure, validate=validate, sharing=sharing, filename=filename,
-                     online=online, asImage=asImage, asUrl=asUrl, asPlot=asPlot,
-                     dimensions=dimensions, display_image=kwargs.get('display_image', True))
+        print(f'参数处理时间: {datetime.now().timestamp()-start}s')
+        return iplot(
+            figure, validate=validate, filename=filename,
+            as_image=as_image, as_url=as_url, as_plot=as_plot,
+            dimensions=dimensions
+        )
 
 
 def get_colors(colors, colorscale, keys, asList=False):
@@ -1340,9 +1322,9 @@ def _layout(self, **kwargs):
 # py_offline.plot(figure,show_link,link_text,validate,output_type,include_plotlyjs,filename,auto_open,image,image_filename,image_width,image_height,config)
 
 
-def iplot(figure, validate=True, sharing=None, filename='',
-          online=None, asImage=False, asUrl=False, asPlot=False,
-          dimensions=None, display_image=True, **kwargs):
+def iplot(figure, validate=True, filename='',
+          as_image=False, as_url=False, as_plot=False,
+          dimensions=None, **kwargs):
     """
     Plots a figure in IPython, creates an HTML or generates an Image
 
@@ -1402,97 +1384,45 @@ def iplot(figure, validate=True, sharing=None, filename='',
 
     for key in list(kwargs.keys()):
         if key not in valid_kwargs:
-            raise Exception("Invalid keyword : '{0}'".format(key))
+            raise Exception(f'Invalid keyword : {key}')
 
-    if 'legend' in kwargs:
-        if 'layout' in figure:
-            figure['layout'].update(showlegend=kwargs['legend'])
+    if 'legend' in kwargs and 'layout' in figure:
+        figure['layout'].update(showlegend=kwargs['legend'])
 
-    ## Sharing Values
-    if all(['world_readable' in kwargs, sharing is None]):
-        sharing = kwargs['world_readable']
-    if isinstance(sharing, bool):
-        if sharing:
-            sharing = 'public'
-        else:
-            sharing = 'private'
-    if sharing is None:
-        sharing = auth.get_config_file()['sharing']
+    # Filename Handling
+    filename = filename or 'Plotly Playground {0}'.format(time.strftime("%Y-%m-%d %H:%M:%S"))
 
-    ## Filename Handling
-    if not filename:
-        # if not figure.get('layout', None):
-        # 	figure['layout'] = {}
-        try:
-            filename = figure.layout['title']['text']
-        except:
-            filename = 'Plotly Playground {0}'.format(time.strftime("%Y-%m-%d %H:%M:%S"))
-    ## Dimensions
-    if not dimensions:
-        dimensions = (800, 500) if not auth.get_config_file()['dimensions'] else auth.get_config_file()['dimensions']
+    # Dimensions
+    dimensions = dimensions or (800, 500)
 
-    ## Offline Links
-    show_link = auth.get_config_file()['offline_show_link']
-    link_text = auth.get_config_file()['offline_link_text']
-    config = auth.get_config_file()['offline_config']
-
-    ## Remove validation if shapes are present
+    # Remove validation if shapes are present
     if 'layout' in figure:
         validate = False if 'shapes' in figure['layout'] else validate
 
-    ## asURL
+    # asURL
     auto_open = True
-    if asUrl:
-        asPlot = True
+    if as_url:
+        as_plot = True
         auto_open = False
 
-    ## Exports
-    if not offline.is_offline() or online:
-        try:
-            import chart_studio.plotly as py
-        except:
-            raise Exception("chart_studio is required outside of offline mode: " \
-                            "please run " \
-                            "pip install chart_studio")
+    if as_image:
+        return offline.py_offline.iplot(
+            figure, validate=validate, filename=filename,
+            image='png', image_width=dimensions[0], image_height=dimensions[1],
+        )
 
-    if asImage:
-        if offline.is_offline() and not online:
-            return offline.py_offline.iplot(figure, validate=validate, filename=filename, show_link=show_link,
-                                            link_text=link_text,
-                                            image='png', image_width=dimensions[0], image_height=dimensions[1],
-                                            config=config)
-        else:
-            try:
-                py.image.save_as(figure, filename='img/' + filename, format='png',
-                                 width=dimensions[0], height=dimensions[1], scale=kwargs.get('scale', None))
-                path = 'img/' + filename + '.png'
-            except:
-                py.image.save_as(figure, filename=filename, format='png',
-                                 width=dimensions[0], height=dimensions[1], scale=kwargs.get('scale', None))
-                path = filename + '.png'
-            if display_image:
-                return display(Image(path))
-            else:
-                print('Image saved : {0}'.format(path))
-                return None
-
-    ## asPlot and asUrl
-    if asPlot:
+    # asPlot and asUrl
+    if as_plot:
         filename += '.html'
-        if offline.is_offline() and not online:
-            return offline.py_offline.plot(figure, filename=filename, validate=validate,
-                                           show_link=show_link, link_text=link_text, auto_open=auto_open, config=config)
-        else:
-            return py.plot(figure, sharing=sharing, filename=filename, validate=validate,
-                           auto_open=auto_open)
+        return offline.py_offline.plot(
+            figure, filename=filename, validate=validate,
+            auto_open=auto_open
+        )
 
-    ## iplot
-    if offline.is_offline() and not online:
-        return offline.py_offline.iplot(figure, validate=validate, filename=filename, show_link=show_link,
-                                        link_text=link_text, config=config)
-    else:
-        return py.iplot(figure, validate=validate, sharing=sharing,
-                        filename=filename)
+    # iplot
+    return offline.py_offline.iplot(
+        figure, validate=validate, filename=filename
+    )
 
 
 def _ta_figure(self, **kwargs):
