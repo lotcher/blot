@@ -206,7 +206,7 @@ def _to_iplot(self, colors=None, colorscale=None, kind='scatter', mode='lines', 
 
 
 def _iplot(
-        self, kind='scatter', data=None, layout=None, filename='', title='', xtitle='', ytitle='',
+        self, kind='line', data=None, layout=None, filename='', title='', xtitle='', ytitle='',
         ztitle='', theme=None, colors=None, colorscale=None, fill=False, width=None,
         dash='solid', mode='', interpolation='linear', symbol='circle', size=12, barmode='', sortbars=False,
         bargap=None, bargroupgap=None, bins=None, histnorm='', histfunc='count',
@@ -858,7 +858,7 @@ def _iplot(
                     df = df[y]
                 if kind == 'area':
                     df = df.transpose().fillna(0).cumsum().transpose()
-                mode = 'lines' if not mode else mode
+                mode = mode or ('lines' if kind != 'scatter' else 'markers')
                 if text:
                     if not isinstance(text, list):
                         text = self[text].values
