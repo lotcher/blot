@@ -721,7 +721,7 @@ def _iplot(
         colors = [colors]
     opacity = kwargs.get('opacity', 0.8)
 
-    theme = theme or 'pearl'
+    theme = theme or 'bowaer'
 
     theme_config = tools.getTheme(theme)
 

@@ -1,4 +1,44 @@
 THEMES = {
+    'bowaer': {
+        'colorscale': 'set1',
+        'linewidth': 1.8,
+        'bargap': .01,
+        'layout': {
+            'legend': {'bgcolor': '#FFFAFA', 'font': {'color': 'pearl06'}},
+            'paper_bgcolor': '#FFFAFA',
+            'plot_bgcolor': '#FFFAFA',
+            "title": {"font": {"color": "pearl06"}, "x": 0.5},
+            'yaxis': {
+                'tickfont': {'color': 'pearl06'},
+                'gridcolor': '#9cddfc',
+                'titlefont': {'color': 'pearl06'},
+                'zerolinecolor': '#9cddfc',
+                'showgrid': True
+            },
+            'xaxis': {
+                'tickfont': {'color': 'pearl06'},
+                'gridcolor': '#9cddfc',
+                'titlefont': {'color': 'pearl06'},
+                'zerolinecolor': '#9cddfc',
+                'showgrid': True
+            },
+            'titlefont': {'color': 'pearl06'}
+        },
+        'annotations': {
+            'fontcolor': 'pearl06',
+            'arrowcolor': 'pearl04'
+        },
+        '3d': {
+            'yaxis': {
+                'gridcolor': '#9cddfc',
+                'zerolinecolor': '#9cddfc'
+            },
+            'xaxis': {
+                'gridcolor': '#9cddfc',
+                'zerolinecolor': '#9cddfc'
+            }
+        }
+    },
     'ggplot': {
         'colorscale': 'ggplot',
         'linewidth': 1.3,
