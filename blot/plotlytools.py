@@ -214,7 +214,7 @@ def _iplot(
         keys=False, bestfit=False, bestfit_colors=None,
         mean=False, mean_colors=None, categories='', x='', y='', z='', text='', gridcolor=None,
         zerolinecolor=None, margin=None, labels=None, values=None, secondary_y='', secondary_y_title='',
-        subplots=False, shape=None, error_x=None, error_y=None, error_type='data',
+        subplots=False, error_x=None, error_y=None, error_type='data',
         locations=None, lon=None, lat=None, as_frame=False, as_dates=False,
         as_figure=False, as_image=False, dimensions=None, as_plot=False, as_url=False, **kwargs
 ):
@@ -459,10 +459,6 @@ def _iplot(
         subplots : bool
             If true then each trace is placed in
             subplot layout
-        shape : (rows,cols)
-            Tuple indicating the size of rows and columns
-            If omitted then the layout is automatically set
-            * Only valid when subplots=True
         error_x : int or float or [int or float]
             error values for the x axis
         error_y : int or float or [int or float]
