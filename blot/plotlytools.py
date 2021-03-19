@@ -208,8 +208,8 @@ def _to_iplot(self, colors=None, colorscale=None, kind='scatter', mode='lines', 
 def _iplot(
         self, kind='line', data=None, layout=None, filename='', title='', xtitle='', ytitle='',
         ztitle='', theme=None, colors=None, colorscale=None, fill=False, width=None,
-        dash='solid', mode='', interpolation='linear', symbol='circle', size=12, barmode='', sortbars=False,
-        bargap=None, bargroupgap=None, bins=None, histnorm='', histfunc='count',
+        dash='solid', mode='', interpolation='linear', symbol='circle', size=12, barmode='',
+        bargap=None, bargroupgap=None, bins=None, histnorm='',
         orientation='v', boxpoints=False, annotations=None, vlines=None, hlines=None,
         keys=False, bestfit=False, bestfit_colors=None,
         mean=False, mean_colors=None, categories='', x='', y='', z='', text='', gridcolor=None,
@@ -339,63 +339,39 @@ def _iplot(
         size : string or int
             Size of marker
             Valid only if marker in mode
+
         barmode : string
-            Mode when displaying bars
+            多维柱状图展示形式，默认group
                 group
                 stack
                 overlay
             * Only valid when kind='bar'
-        sortbars : bool
-            Sort bars in descending order
-            * Only valid when kind='bar'
+
         bargap : float
             Sets the gap between bars
                 [0,1)
             * Only valid when kind is 'histogram' or 'bar'
-        bargroupgap : float
-            Set the gap between groups
-                [0,1)
+
+        bargroupgap : float[0,1)
+            组内间隔距离
             * Only valid when kind is 'histogram' or 'bar'
+
         bins : int or tuple
-            if int:
-                Specifies the number of bins
-            if tuple:
-                (start, end, size)
-                start : starting value
-                end: end value
-                size: bin size
-            * Only valid when kind='histogram'
+            if int: 分桶数量
+            if tuple: (start, end, size)
+                start : 横坐标起始截断值
+                end: 横坐标结束截断值
+                size: 分桶数量
+            * 仅在kind=histogram时生效
 
         histnorm : string
-                '' (frequency)
-                percent
-                probability
-                density
-                probability density
-            Sets the type of normalization for an histogram trace. By default
-            the height of each bar displays the frequency of occurrence, i.e.,
-            the number of times this value was found in the
-            corresponding bin. If set to 'percent', the height of each bar
-            displays the percentage of total occurrences found within the
-            corresponding bin. If set to 'probability', the height of each bar
-            displays the probability that an event will fall into the
-            corresponding bin. If set to 'density', the height of each bar is
-            equal to the number of occurrences in a bin divided by the size of
-            the bin interval such that summing the area of all bins will yield
-            the total number of occurrences. If set to 'probability density',
-            the height of each bar is equal to the number of probability that an
-            event will fall into the corresponding bin divided by the size of
-            the bin interval such that summing the area of all bins will yield
-            1.
-            * Only valid when kind='histogram'
-        histfunc : string
-                count
-                sum
-                avg
-                min
-                max
-           Sets the binning function used for an histogram trace.
-            * Only valid when kind='histogram'
+                '' (frequency)：频数
+                percent: 百分数（0-100）
+                probability：频率（0-1）
+                density: 密度 = frequency/bins
+                probability density: 概率密度 = probability/bins
+            * 仅在kind=histogram时生效
+
         orientation : string
                 h
                 v
@@ -785,10 +761,11 @@ def _iplot(
             if 'bar' in kind:
                 df = self.copy()
                 df = df.set_index(categories)
-                fig = df.figure(kind=kind, colors=colors, colorscale=colorscale, fill=fill, width=width,
-                                sortbars=sortbars, opacity=opacity,
-                                asDates=as_dates, mode=mode, symbol=symbol, size=size, text=text, barmode=barmode,
-                                orientation=orientation)
+                fig = df.figure(
+                    kind=kind, colors=colors, colorscale=colorscale, fill=fill, width=width,
+                    opacity=opacity, asDates=as_dates, mode=mode, symbol=symbol, size=size, text=text,
+                    barmode=barmode, orientation=orientation
+                )
                 data = fig['data']
             else:
                 _keys = pd.unique(self[categories])
@@ -859,7 +836,7 @@ def _iplot(
                     if not isinstance(text, list):
                         text = self[text].values
                 data = df.to_iplot(colors=colors, colorscale=colorscale, kind=kind, interpolation=interpolation,
-                                   fill=fill, width=width, dash=dash, sortbars=sortbars, keys=keys,
+                                   fill=fill, width=width, dash=dash, keys=keys,
                                    bestfit=bestfit, bestfit_colors=bestfit_colors, mean=mean, mean_colors=mean_colors,
                                    asDates=as_dates, mode=mode, symbol=symbol, size=size,
                                    text=text, **kwargs)
@@ -943,7 +920,7 @@ def _iplot(
                         __ = dict(x=df[_].values.tolist(), name=_,
                                   marker=dict(color=clrs[_], line=dict(width=width)),
                                   orientation=orientation,
-                                  opacity=kwargs['opacity'] if 'opacity' in kwargs else .8, histfunc=histfunc,
+                                  opacity=kwargs['opacity'] if 'opacity' in kwargs else .8,
                                   histnorm=histnorm)
 
                         __['marker'] = get_marker(__['marker'])
