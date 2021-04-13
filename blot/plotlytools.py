@@ -8,7 +8,7 @@ from plotly.graph_objs import Figure, Layout, Bar, Box, Scatter, FigureWidget, S
 import plotly.figure_factory as ff
 from collections import defaultdict
 from IPython.display import display, Image
-from .exceptions import CufflinksError
+from .exceptions import BlotError
 from .colors import normalize, get_scales, colorgen, to_rgba, get_colorscale
 from .utils import check_kwargs, deep_update, kwargs_from_keyword, is_list
 from . import tools
@@ -37,8 +37,8 @@ def dict_to_iplot(d):
 
 def _to_iplot(self, colors=None, colorscale=None, kind='scatter', mode='lines', interpolation='linear', symbol='dot',
               size='12', fill=False,
-              width=3, dash='solid', sortbars=False, keys=False, bestfit=False, bestfit_colors=None, opacity=0.6,
-              mean=False, mean_colors=None, asDates=False, asTimestamp=False, text=None, **kwargs):
+              width=3, dash='solid', sortbars=False, keys=None, bestfit=False, bestfit_colors=None, opacity=0.6,
+              asDates=False, asTimestamp=False, text=None, **kwargs):
     """
     Generates a plotly Data object
 
@@ -187,306 +187,267 @@ def _to_iplot(self, colors=None, colorscale=None, kind='scatter', mode='lines', 
         data.extend(bestfit_lines)
         return data
 
-    if mean:
-        if type(mean) == list:
-            keys = mean
-        d = {}
-        for key in keys:
-            mean = df[key].mean()
-            d['MEAN({key})'.format(key=key)] = pd.Series([mean] * len(df[key]), index=df[key].index)
-        mean_lines = pd.DataFrame(d).to_iplot(mean=False, colors=mean_colors, kind='scatter', asTimestamp=asTimestamp)
-        for line in mean_lines:
-            line['line']['dash'] = 'dash'
-            if not mean_colors:
-                line['line']['color'] = to_rgba(line['line']['color'], .6)
-        data = [lines_plotly]
-        data.extend(mean_lines)
-        return data
     return lines_plotly
 
 
 def _iplot(
-        self, kind='line', data=None, layout=None, filename='', title='', xtitle='', ytitle='',
-        ztitle='', theme=None, colors=None, colorscale=None, fill=False, width=None,
-        dash='solid', mode='', interpolation='linear', symbol='circle', size=12, barmode='',
-        bargap=None, bargroupgap=None, bins=None, histnorm='',
-        orientation='v', boxpoints=False, annotations=None, vlines=None, hlines=None,
-        keys=False, bestfit=False, bestfit_colors=None,
-        mean=False, mean_colors=None, categories='', x='', y='', z='', text='', gridcolor=None,
-        zerolinecolor=None, margin=None, labels=None, values=None, secondary_y='', secondary_y_title='',
-        subplots=False, error_x=None, error_y=None, error_type='data',
-        locations=None, lon=None, lat=None, as_frame=False, as_dates=False,
-        as_figure=False, as_image=False, dimensions=None, as_plot=False, as_url=False, **kwargs
+        self, kind='line', data=None, layout=None,
+
+        x='', y='', y2='', z='', labels=None, values=None, text='', keys=None,
+
+        title='', xtitle='', ytitle='', y2title='', ztitle='',
+
+        theme=None, colors=None, colorscale=None, fill=False, width=None,
+        dash='solid', mode='', interpolation='linear', symbol='circle', size=12,
+
+        barmode='', bargap=None, bargroupgap=None, bins=None, histnorm='', boxpoints=False,
+
+        orientation='v', annotations=None, vlines=None, hlines=None,
+
+        gridcolor=None, zerolinecolor=None, margin=None, dimensions=None, subplots=False, as_figure=True, **kwargs
 ):
     """
-    Returns a plotly chart either as inline chart, image of Figure object
-
+    默认返回plotly Figure对象
     Parameters:
     -----------
         kind : string
             Kind of chart
-                scatter
-                bar
-                box
-                spread
-                ratio
-                heatmap
-                surface
-                histogram
-                bubble
-                bubble3d
-                scatter3d
-                scattergeo
-                ohlc
-                candle
-                pie
-                choroplet
+                line：折线图
+                scatter：散点图
+                scatter3d：3d散点图
+                bar：柱状图
+                histogram：直方图
+                box：箱形图
+                spread：折线图对比，自动增加fig1-fig2子图
+                ratio：折线图对比，自动增加fig1/fig2子图
+                heatmap：热力图
+                surface：曲面图
+                bubble：气泡图
+                bubble3d：3d气泡图
+                pie：扇形图
+
         data : Data
-            Plotly Data Object.
-            If not entered then the Data object will be automatically
-            generated from the DataFrame.
+            Plotly Data 对象.
+            如果未显式指定，则自动从DataFrame对象生成
+
         layout : Layout
-            Plotly layout Object
-            If not entered then the Layout objet will be automatically
-            generated from the DataFrame.
-        filename : string
-            Filename to be saved as in plotly account
+            Plotly layout 对象
+            如果未显式指定，则自动从DataFrame对象生成
+
+        ------------------------------------
+
+        x : string
+            代表x轴取值的列名
+
+        y : string or list
+            代表y轴取值的列名
+
+        y2 : string or list(string)
+            代表第二y轴取值的列名，用法同y相同，也可以和y同时使用。
+
+        z : string
+            代表z轴取值的列名
+
+        labels : string or list
+                string：单列作为label
+                list：多列的组合作为label
+            Pie图中label对应的列名
+            * 仅当kind='pie'时有效
+
+        values : string
+            Pie图中的取值列名
+            * 仅当kind='pie'时有效
+
+        text : string
+            包含text取值的列名
+
+        keys : list of columns
+            参与绘图的df列名，默认为df.columns
+            也可以用作排序，作用类似于df[keys]
+
+        ------------------------------------
+
         title : string
-            Chart Title
+            图像标题
+
         xtitle : string
-            X Axis Title
+            x轴标题
+
         ytitle : string
-            Y Axis Title
-                zTitle : string
+            y轴标题
+
+        y2title : string
+            第二y轴名称
+
         ztitle : string
-            Z Axis Title
-            Applicable only for 3d charts
+            z轴标题
+            仅在3d图中生效
+
+        ------------------------------------
+
         theme : string
-            Layout Theme
+            Layout 主题
+                bowaer
                 solar
                 pearl
                 white
-            see blot.getThemes() for all
-            available themes
+                …………
+            通过blot.getThemes() 查看所有内置可用主题，默认主题为bowaer
+
         colors : dict, list or string
-            {key:color} to specify the color for each column
-            [colors] to use the colors in the defined order
+            {key:color} 为每一条trace单独指定颜色
+            [colors] zip(colors, traces)来指定颜色
+
         colorscale : string
-            Color scale name
-            If the color name is preceded by a minus (-)
-            then the scale is inversed
-            Only valid if 'colors' is null
-            See blot.colors.scales() for available scales
+            内置的色阶名称
+            若色阶名前带'-'，则颜色反转
+            仅当未设置colors参数时有效
+            在blot.colors.scales()查看有效色阶名称
+
         fill : bool
-            Filled Traces
+            是否填充曲线
+
         width : dict, list or int
-                int : applies to all traces
-                list : applies to each trace in the order
-                        specified
-                dict: {column:value} for each column in
-                        the dataframe
-            Line width
+                int : 应用于所有曲线
+                list : 按照顺序应用在各条曲线
+                dict: {column:value} 为每条曲线单独指定线宽
+            线宽，如果不指定，则从theme读取，如果theme没有，则默认为2
+
         dash : dict, list or string
-                string : applies to all traces
-                list : applies to each trace in the order
-                        specified
-                dict: {column:value} for each column in
-                        the dataframe
-            Drawing style of lines
-                solid
-                dash
-                dashdot
-                dot
+                string : 应用于所有曲线
+                list : 按照顺序应用在各条曲线
+                dict: {column:value} 为每条曲线单独指定线宽
+            线型
+                solid「默认」：实线  '————'
+                dash：短线 '- - - - '
+                dashdot：带点短线 '-•-•-•-'
+                dot：点连线  '••••••'
+
         mode : dict, list or string
-                string : applies to all traces
-                list : applies to each trace in the order
-                        specified
-                dict: {column:value} for each column in
-                        the dataframe
-            Plotting mode for scatter trace
-                lines
-                markers
-                lines+markers
-                lines+text
-                markers+text
-                lines+markers+text
-        interpolation : dict, list, or string
-                string : applies to all traces
-                list : applies to each trace in the order
-                        specified
-                dict: {column:value} for each column in
-                        the dataframe
-            Positioning of the connecting lines
-                linear
-                spline
-                vhv
-                hvh
-                vh
-                hv
-        symbol : dict, list or string
-                string : applies to all traces
-                list : applies to each trace in the order
-                        specified
-                dict: {column:value} for each column in
-                        the dataframe
-            The symbol that is drawn on the plot for each marker
-            Valid only when mode includes markers
-                circle
-                circle-dot
-                diamond
-                square
-                and many more...(see plotly.validators.scatter.marker.SymbolValidator.values)
+                string : 应用于所有曲线
+                list : 按照顺序应用在各条曲线
+                dict: {column:value} 为每条曲线单独指定线宽
+            散点图下绘制模式
+                markers「默认」
+                lines：连线。和kind='line'效果相同
+                lines+markers：用线将散点连接
+                lines+text：线+注解。text由text参数指定
+                markers+text：点+注解
+                lines+markers+text：线+点+注解
+
+        interpolation : string
+            连线方式
+                linear「默认」：直线连接
+                spline：曲线连接
+                vhv：纵横纵的方式连接
+                hvh：横纵横的方式连接
+                vh：纵横的方式连接
+                hv：横纵的方式连接
+
+        symbol : string
+            散点的形状，仅当mode的取值包含markers时生效
+                circle「默认」：实心圆点
+                circle-dot：空心圆点
+                diamond：菱形
+                square：正方形
+                ………可参照plotly scatter symbol查看更多有效值
+
         size : string or int
-            Size of marker
-            Valid only if marker in mode
+            散点大小
+                string：气泡图中气泡大小对应的列名
+                int：散点图中散点的大小，定值
+
+        ------------------------------------
 
         barmode : string
             多维柱状图展示形式，默认group
                 group
                 stack
                 overlay
-            * Only valid when kind='bar'
+            仅当kind='bar'时有效
 
-        bargap : float
-            Sets the gap between bars
-                [0,1)
-            * Only valid when kind is 'histogram' or 'bar'
+        bargap : float[0,1)
+            组间间隔
+            仅当kind='bar'或者'histogram'时有效
 
         bargroupgap : float[0,1)
             组内间隔距离
-            * Only valid when kind is 'histogram' or 'bar'
+            仅当kind='bar'或者'histogram'时有效
 
         bins : int or tuple
-            if int: 分桶数量
-            if tuple: (start, end, size)
+            int: 分桶数量
+            tuple: (start, end, size)
                 start : 横坐标起始截断值
                 end: 横坐标结束截断值
                 size: 分桶数量
-            * 仅在kind=histogram时生效
+            仅在kind=histogram时生效
 
         histnorm : string
-                '' (frequency)：频数
+                '' (frequency)「默认」：频数
                 percent: 百分数（0-100）
                 probability：频率（0-1）
                 density: 密度 = frequency/bins
                 probability density: 概率密度 = probability/bins
-            * 仅在kind=histogram时生效
+            仅在kind=histogram时生效
+
+        boxpoints : string
+            箱形图（box）中散点的展示方式。默认不展示
+                False「默认」：不展示
+                outliers：仅展示离群点
+                all：展示所有点
+                suspectedoutliers：仅展示疑似离群点
+
+        ------------------------------------
 
         orientation : string
-                h
-                v
-            Sets the orientation of the bars. If set to 'v', the length of each
-            bar will run vertically. If set to 'h', the length of each bar will
-            run horizontally
-            * Only valid when kind is 'histogram','bar' or 'box'
-        boxpoints : string
-            Displays data points in a box plot
-                outliers
-                all
-                suspectedoutliers
-                False
-        annotations : dictionary
-            Dictionary of annotations
-            {x_point : text}
-        vlines: 横坐标列表
-            需要绘制垂直（平行于y轴）参考线的x取值列表
-        hlines: 纵坐标列表
-            需要绘制水平（平行于x轴）参考线的x取值列表
-        keys : list of columns
-            List of columns to chart.
-            Also can be used for custom sorting.
-        bestfit : boolean or list
-            If True then a best fit line will be generated for
-            all columns.
-            If list then a best fit line will be generated for
-            each key on the list.
-        bestfit_colors : list or dict
-            {key:color} to specify the color for each column
-            [colors] to use the colors in the defined order
-        categories : string
-            Name of the column that contains the categories
-        x : string
-            Name of the column that contains the x axis values
-        y : string
-            Name of the column that contains the y axis values
-        z : string
-            Name of the column that contains the z axis values
-        text : string
-            Name of the column that contains the text values
-        gridcolor : string
-            Grid color
-        zerolinecolor : string
-            Zero line color
-        margin : dict or tuple
-            Dictionary (l,r,b,t) or
-            Tuple containing the left,
-            right, bottom and top margins
-        labels : string
-            Name of the column that contains the labels.
-            * Only valid when kind='pie'
-        values : string
-            Name of the column that contains the values.
-            * Only valid when kind='pie'
-        secondary_y : string or list(string)
-            Name(s) of the column to be charted on the
-            right hand side axis
-        secondary_y_title : string
-            Title of the secondary axis
-        subplots : bool
-            If true then each trace is placed in
-            subplot layout
-        error_x : int or float or [int or float]
-            error values for the x axis
-        error_y : int or float or [int or float]
-            error values for the y axis
-        error_type : string
-            type of error bars
-                'data'
-                'constant'
-                'percent'
-                'sqrt'
-                'continuous'
-                'continuous_percent'
-        as_frame : bool
-            If true then the data component of Figure will
-            be of Pandas form (Series) otherwise they will
-            be index values
-        as_dates : bool
-            If true it truncates times from a DatetimeIndex
-        as_figure : bool
-            If True returns plotly Figure
-        as_image : bool
-            If True it returns an Image (png)
-            In ONLINE mode:
-                Image file is saved in the working directory
-                    Accepts:
-                        filename
-                        dimensions
-                        scale
-                        display_image
-            In OFFLINE mode:
-                Image file is downloaded (downloads folder) and a
-                regular plotly chart is displayed in Jupyter
-                    Accepts:
-                        filename
-                        dimensions
-        dimensions : tuple(int,int)
-            Dimensions for image / chart
-                (width,height)
-        as_plot : bool
-            If True the chart opens in browser
-        as_url : bool
-            If True the chart url/path is returned. No chart is displayed.
-                If Online : the URL is returned
-                If Offline : the local path is returned
+            图例方向
+                v「默认」：纵向
+                h：横向
+            仅当kind='bar'、'histogram'、'box'时有效
 
-        Other Kwargs
-        ============
+        annotations : dict
+            图例标注
+            {x_point : text}：{横坐标取值, 标注内容}
+
+        vlines: list
+            需要绘制垂直（平行于y轴）参考线的x取值列表
+
+        hlines: list
+            需要绘制水平（平行于x轴）参考线的x取值列表
+
+        ------------------------------------
+
+        gridcolor : string
+            网格线颜色
+
+        zerolinecolor : string
+            坐标轴颜色
+
+        margin : dict or tuple
+                Tuple: 按照（left, right, bottom, top) 给出取值
+                dict: key of ('l', 'r', 'b', 't'), 例如{'l':30} 代表距离左边界30px
+            图例和上下左右边界的距离
+
+        dimensions : tuple(int,int)
+            图像的尺寸(width,height)
+            jupyter中默认会充满输出
+            返回静态图或者plotly对象默认为(800, 500)
+
+        subplots : bool or tuple(rows, cols)
+                bool:是否以子图的形式展示，默认为False。True则按照2列的形式展示子图
+                tuple(rows, cols): 子图的栅栏分布
+            子图的展示控制
+
+        as_figure : bool=True
+            是否返回plotly对象
+
+
+    ==========Other Kwargs===================
         Line, Scatter
             connectgaps : bool
                 If True, empty values are connected
         Pie charts
-            sort : bool
+            sort : bool=True
                 If True it sorts the labels by value
             pull : float [0-1]
                 Pulls the slices from the centre
@@ -526,24 +487,6 @@ def _iplot(
             zmax : float
                 Defines the maximum range for the z values.
                 This affects the range for the colorscale
-
-        Error Bars
-            error_trace : string
-                Name of the column for which error should be
-                plotted. If omitted then errors apply to all
-                traces.
-            error_values_minus : int or float or [int or float]
-                Values corresponding to the span of the error bars
-                below the trace coordinates
-            error_color : string
-                Color for error bars
-            error_thickness : float
-                Sets the line thickness of the error bars
-            error_width :  float
-                Sets the width (in pixels) of the cross-bar at both
-                ends of the error bars
-            error_opacity : float [0,1]
-                Opacity for the error bars
 
         Subplots
             horizontal_spacing : float [0,1]
@@ -661,18 +604,13 @@ def _iplot(
         'specs', 'insets', 'start_cell', 'shared_xaxes',
         'shared_yaxes', 'subplot_titles', 'shared_xaxis', 'shared_yaxis'
     ]
-    GEO_KWARGS = ['locationmode', 'locationsrc', 'geo', 'lon', 'lat']
-    ERROR_KWARGS = [
-        'error_trace', 'error_values_minus', 'error_color',
-        'error_thickness', 'error_width', 'error_opacity'
-    ]
+
     EXPORT_KWARGS = ['display_image', 'scale']
-    FF_DISTPLOT = ["group_labels", "bin_size", "curve_type", "rug_text", "show_hist", "show_curve", "show_rug"]
-    FF_VIOLIN = ["data_header", "group_header", "show_rug", "sort"]
+
     kwargs_list = [
         tools.__LAYOUT_KWARGS, BUBBLE_KWARGS, TRACE_KWARGS,
-        OHLC_KWARGS, PIE_KWARGS, HEATMAP_SURFACE_KWARGS, SUBPLOT_KWARGS, GEO_KWARGS, ERROR_KWARGS,
-        EXPORT_KWARGS, FF_DISTPLOT, FF_VIOLIN
+        OHLC_KWARGS, PIE_KWARGS, HEATMAP_SURFACE_KWARGS, SUBPLOT_KWARGS,
+        EXPORT_KWARGS,
     ]
     [valid_kwargs.extend(_) for _ in kwargs_list]
 
@@ -756,429 +694,223 @@ def _iplot(
     )
 
     if not data:
-        if categories and kind not in ('violin'):
-            data = []
+        if kind in ('scatter', 'spread', 'ratio', 'bar', 'barh', 'area', 'line'):
+            df = self.copy()
+            if type(df) == pd.core.series.Series:
+                df = pd.DataFrame({df.name: df})
+            if x:
+                df = df.set_index(x)
+            if y and y2:
+                _y = [y] if not isinstance(y, list) else y
+                _secondary_y = [y2] if not isinstance(y2, list) else y2
+                df = df[_y + _secondary_y]
+            elif y:
+                df = df[y]
+            if kind == 'area':
+                df = df.transpose().fillna(0).cumsum().transpose()
+            mode = mode or ('lines' if kind != 'scatter' else 'markers')
+            if text:
+                if not isinstance(text, list):
+                    text = self[text].values
+            data = df.to_iplot(colors=colors, colorscale=colorscale, kind=kind, interpolation=interpolation,
+                               fill=fill, width=width, dash=dash, keys=keys,
+                               asDates=False, mode=mode, symbol=symbol, size=size,
+                               text=text, **kwargs)
+            trace_kw = check_kwargs(kwargs, TRACE_KWARGS)
+            for trace in data:
+                trace.update(**trace_kw)
+
+            if kind in ('spread', 'ratio'):
+                if kind == 'spread':
+                    trace = self.apply(lambda x: x[0] - x[1], axis=1)
+                    positive = trace.apply(lambda x: x if x >= 0 else np.nan)
+                    negative = trace.apply(lambda x: x if x < 0 else np.nan)
+                    trace = pd.DataFrame({'positive': positive, 'negative': negative})
+                    trace = trace.to_iplot(colors={'positive': 'green', 'negative': 'red'}, width=0.5)
+                else:
+                    trace = self.apply(lambda x: x[0] * 1.0 / x[1], axis=1).to_iplot(colors=['green'], width=1)
+                for t in trace:
+                    t.update({'xaxis': 'x2', 'yaxis': 'y2', 'fill': 'tozeroy',
+                              'name': kind.capitalize(), 'connectgaps': False, 'showlegend': False})
+                data.append(trace[0])
+                if kind == 'spread':
+                    data.append(trace[1])
+                layout['yaxis'].update({'domain': [.3, 1]})
+                layout['yaxis2'] = copy.deepcopy(layout['yaxis'])
+                layout['xaxis2'] = copy.deepcopy(layout['xaxis'])
+                layout['yaxis2'].update(domain=[0, .25], title=kind.capitalize())
+                layout['xaxis2'].update(anchor='y2', showticklabels=False)
+                layout['hovermode'] = 'x'
             if 'bar' in kind:
-                df = self.copy()
-                df = df.set_index(categories)
-                fig = df.figure(
-                    kind=kind, colors=colors, colorscale=colorscale, fill=fill, width=width,
-                    opacity=opacity, asDates=as_dates, mode=mode, symbol=symbol, size=size, text=text,
-                    barmode=barmode, orientation=orientation
-                )
-                data = fig['data']
-            else:
-                _keys = pd.unique(self[categories])
-                colors = get_colors(colors, colorscale, _keys)
-                mode = 'markers' if not mode else mode
-                for _ in _keys:
-                    __ = self[self[categories] == _].copy()
-                    if text:
-                        _text = __[text] if as_frame else __[text].values
-                    _x = __[x] if as_frame else __[x].values
-                    _y = __[y] if as_frame else __[y].values
-                    if z:
-                        _z = __[z] if as_frame else __[z].values
-                    if 'bubble' in kind:
-                        rg = __[size].values
-                        rgo = self[size].values
-                        if not kwargs.get('abs_size', False):
-                            if len(rgo) > 1:
-                                _size = [int(100 * (float(i) - rgo.min()) / (rgo.max() - rgo.min())) + 12 for i in rg]
-                            else:
-                                _size = [12] if len(rgo) else []
-                        else:
-                            _size = rgo
-                    else:
-                        _size = size
-                    _data = Scatter3d(x=_x, y=_y, mode=mode, name=_,
-                                      marker=dict(color=colors[_], symbol=symbol, size=_size, opacity=opacity,
-                                                  line=dict(width=width)),
-                                      textfont=tools.getLayout(theme=theme)['xaxis']['titlefont'])
-                    if '3d' in kind:
-                        _data = Scatter3d(x=_x, y=_y, z=_z, mode=mode, name=_,
-                                          marker=dict(color=colors[_], symbol=symbol, size=_size, opacity=opacity,
-                                                      line=dict(width=width)),
-                                          textfont=tools.getLayout(theme=theme)['xaxis']['titlefont'])
-                    else:
-                        # see error 168
-                        if type(_x) == np.ndarray:
-                            if '[ns]' in _x.dtype.str:
-                                _x = _x.astype(str)
-                        if type(_y) == np.ndarray:
-                            if '[ns]' in _y.dtype.str:
-                                _y = _y.astype(str)
-
-                        _data = Scatter(x=_x, y=_y, mode=mode, name=_,
-                                        marker=dict(color=colors[_], symbol=symbol, size=_size, opacity=opacity,
-                                                    line=dict(width=width)),
-                                        textfont=tools.getLayout(theme=theme)['xaxis']['titlefont'])
-                    if text:
-                        _data.update(text=_text)
-                    data.append(_data)
-        else:
-            if kind in ('scatter', 'spread', 'ratio', 'bar', 'barh', 'area', 'line'):
-                df = self.copy()
-                if type(df) == pd.core.series.Series:
-                    df = pd.DataFrame({df.name: df})
-                if x:
-                    df = df.set_index(x)
-                if y and secondary_y:
-                    _y = [y] if not isinstance(y, list) else y
-                    _secondary_y = [secondary_y] if not isinstance(secondary_y, list) else secondary_y
-                    df = df[_y + _secondary_y]
-                elif y:
-                    df = df[y]
-                if kind == 'area':
-                    df = df.transpose().fillna(0).cumsum().transpose()
-                mode = mode or ('lines' if kind != 'scatter' else 'markers')
-                if text:
-                    if not isinstance(text, list):
-                        text = self[text].values
-                data = df.to_iplot(colors=colors, colorscale=colorscale, kind=kind, interpolation=interpolation,
-                                   fill=fill, width=width, dash=dash, keys=keys,
-                                   bestfit=bestfit, bestfit_colors=bestfit_colors, mean=mean, mean_colors=mean_colors,
-                                   asDates=as_dates, mode=mode, symbol=symbol, size=size,
-                                   text=text, **kwargs)
-                trace_kw = check_kwargs(kwargs, TRACE_KWARGS)
+                if 'stack' in barmode:
+                    layout['legend'].update(traceorder='normal')
+                orientation = 'h' if kind == 'barh' else orientation
                 for trace in data:
-                    trace.update(**trace_kw)
+                    trace.update(orientation=orientation)
+                    if orientation == 'h':
+                        trace['x'], trace['y'] = trace['y'], trace['x']
 
-                if kind in ('spread', 'ratio'):
-                    if kind == 'spread':
-                        trace = self.apply(lambda x: x[0] - x[1], axis=1)
-                        positive = trace.apply(lambda x: x if x >= 0 else np.nan)
-                        negative = trace.apply(lambda x: x if x < 0 else np.nan)
-                        trace = pd.DataFrame({'positive': positive, 'negative': negative})
-                        trace = trace.to_iplot(colors={'positive': 'green', 'negative': 'red'}, width=0.5)
-                    else:
-                        trace = self.apply(lambda x: x[0] * 1.0 / x[1], axis=1).to_iplot(colors=['green'], width=1)
-                    for t in trace:
-                        t.update({'xaxis': 'x2', 'yaxis': 'y2', 'fill': 'tozeroy',
-                                  'name': kind.capitalize(), 'connectgaps': False, 'showlegend': False})
-                    data.append(trace[0])
-                    if kind == 'spread':
-                        data.append(trace[1])
-                    layout['yaxis'].update({'domain': [.3, 1]})
-                    layout['yaxis2'] = copy.deepcopy(layout['yaxis'])
-                    layout['xaxis2'] = copy.deepcopy(layout['xaxis'])
-                    layout['yaxis2'].update(domain=[0, .25], title=kind.capitalize())
-                    layout['xaxis2'].update(anchor='y2', showticklabels=False)
-                    layout['hovermode'] = 'x'
-                if 'bar' in kind:
-                    if 'stack' in barmode:
-                        layout['legend'].update(traceorder='normal')
-                    orientation = 'h' if kind == 'barh' else orientation
-                    for trace in data:
-                        trace.update(orientation=orientation)
-                        if orientation == 'h':
-                            trace['x'], trace['y'] = trace['y'], trace['x']
-
-            elif kind == 'bubble':
-                mode = 'markers' if 'markers' not in mode else mode
-                x = self[x].values.tolist()
-                y = self[y].values.tolist()
-                z = size if size else z
-                rg = self[z].values
-                if not kwargs.get('abs_size', False):
-                    if len(rg) > 1:
-                        z = [int(100 * (float(_) - rg.min()) / (rg.max() - rg.min())) + 12 for _ in rg]
-                    else:
-                        z = [12] if len(rg) else []
+        elif kind == 'bubble':
+            mode = 'markers' if 'markers' not in mode else mode
+            x = self[x].values.tolist()
+            y = self[y].values.tolist()
+            z = size if size else z
+            rg = self[z].values
+            if not kwargs.get('abs_size', False):
+                if len(rg) > 1:
+                    z = [int(100 * (float(_) - rg.min()) / (rg.max() - rg.min())) + 12 for _ in rg]
                 else:
-                    z = rg
-                text = kwargs['labels'] if 'labels' in kwargs else text
-                labels = self[text].values.tolist() if text else ''
-                clrs = colors if colors else get_scales(colorscale)
-                clrs = [clrs] if not isinstance(clrs, list) else clrs
-                clrs = [clrs[0]] * len(x) if len(clrs) == 1 else clrs
-                marker = dict(color=clrs, size=z, symbol=symbol,
-                              line=dict(width=width))
-                trace = Scatter(x=x, y=y, marker=marker, mode='markers', text=labels)
-                data = [trace]
-            elif kind in ('box', 'histogram', 'hist'):
-                if isinstance(self, pd.core.series.Series):
-                    df = pd.DataFrame({self.name: self})
-                else:
-                    df = self.copy()
-                data = []
-                clrs = get_colors(colors, colorscale, df.columns)
-                if 'hist' in kind:
-                    barmode = 'overlay' if barmode == '' else barmode
-                    layout.update(barmode=barmode)
-                columns = keys if keys else df.columns
-                for _ in columns:
-                    if kind == 'box':
-                        __ = Box(y=df[_].values.tolist(), marker=dict(color=clrs[_]), name=_,
-                                 line=dict(width=width), boxpoints=boxpoints)
-                        # 114 - Horizontal Box
-                        __['orientation'] = orientation
-                        if orientation == 'h':
-                            __['x'], __['y'] = __['y'], __['x']
+                    z = [12] if len(rg) else []
+            else:
+                z = rg
+            text = kwargs['labels'] if 'labels' in kwargs else text
+            labels = self[text].values.tolist() if text else ''
+            clrs = colors if colors else get_scales(colorscale)
+            clrs = [clrs] if not isinstance(clrs, list) else clrs
+            clrs = [clrs[0]] * len(x) if len(clrs) == 1 else clrs
+            marker = dict(color=clrs, size=z, symbol=symbol,
+                          line=dict(width=width))
+            trace = Scatter(x=x, y=y, marker=marker, mode='markers', text=labels)
+            data = [trace]
 
-                    else:
-                        __ = dict(x=df[_].values.tolist(), name=_,
-                                  marker=dict(color=clrs[_], line=dict(width=width)),
-                                  orientation=orientation,
-                                  opacity=kwargs['opacity'] if 'opacity' in kwargs else .8,
-                                  histnorm=histnorm)
-
-                        __['marker'] = get_marker(__['marker'])
-
-                        if orientation == 'h':
-                            __['y'] = __['x']
-                            del __['x']
-                        __ = Histogram(__)
-                        if bins:
-                            if type(bins) in (tuple, list):
-                                try:
-                                    _bins = {'start': bins[0], 'end': bins[1], 'size': bins[2]}
-                                    if orientation == 'h':
-                                        __.update(ybins=_bins, autobiny=False)
-                                    else:
-                                        __.update(xbins=_bins, autobinx=False)
-                                except:
-                                    print("Invalid format for bins generation")
-                            else:
-                                if orientation == 'h':
-                                    __.update(nbinsy=bins)
-                                else:
-                                    __.update(nbinsx=bins)
-                    data.append(__)
-
-            elif kind in ('heatmap', 'surface'):
-                if x:
-                    x = self[x].values.tolist()
-                else:
-                    if self.index.__class__.__name__ in ('PeriodIndex', 'DatetimeIndex'):
-                        x = self.index.format()
-                    else:
-                        x = self.index.values.tolist()
-                y = self[y].values.tolist() if y else self.columns.values.tolist()
-                z = self[z].values.tolist() if z else self.values.transpose()
-                scale = get_scales('rdbu') if not colorscale else get_scales(colorscale)
-                scale = [normalize(_) for _ in scale]
-                colorscale = [[float(_) / (len(scale) - 1), scale[_]] for _ in range(len(scale))]
-                center_scale = kwargs.get('center_scale', None)
-
-                if is_list(z):
-                    zmin = min(z)
-                    zmax = max(z)
-                else:
-                    zmin = z.min()
-                    zmax = z.max()
-
-                if center_scale is not None:
-                    if center_scale <= zmin + (zmax - zmin) / 2:
-                        zmin = center_scale * 2 - zmax
-                    else:
-                        zmax = center_scale * 2 - zmin
-                zmin = kwargs.get('zmin', zmin)
-                zmax = kwargs.get('zmax', zmax)
-                if kind == 'heatmap':
-                    data = [Heatmap(z=z, x=x, y=y, zmin=zmin, zmax=zmax, colorscale=colorscale)]
-                else:
-                    data = [Surface(z=z, x=x, y=y, colorscale=colorscale)]
-
-            elif kind in ('scatter3d', 'bubble3d'):
-                data = []
-                keys = self[text].values if text else list(range(len(self)))
-                colors = get_colors(colors, colorscale, keys, asList=True)
-                mode = 'markers' if 'markers' not in mode else mode
+        elif kind in ('box', 'histogram', 'hist'):
+            if isinstance(self, pd.core.series.Series):
+                df = pd.DataFrame({self.name: self})
+            else:
                 df = self.copy()
-                df['index'] = keys
-                if kind == 'bubble3d':
-                    rg = self[size].values
-                    if not kwargs.get('abs_size', False):
-                        size = [int(100 * (float(_) - rg.min()) / (rg.max() - rg.min())) + 12 for _ in rg]
-                    else:
-                        size = rg
+            data = []
+            clrs = get_colors(colors, colorscale, df.columns)
+            if 'hist' in kind:
+                barmode = 'overlay' if barmode == '' else barmode
+                layout.update(barmode=barmode)
+            columns = keys if keys else df.columns
+            for _ in columns:
+                if kind == 'box':
+                    __ = Box(y=df[_].values.tolist(), marker=dict(color=clrs[_]), name=_,
+                             line=dict(width=width), boxpoints=boxpoints)
+                    # 114 - Horizontal Box
+                    __['orientation'] = orientation
+                    if orientation == 'h':
+                        __['x'], __['y'] = __['y'], __['x']
+
                 else:
-                    size = [size for _ in range(len(keys))]
+                    __ = dict(x=df[_].values.tolist(), name=_,
+                              marker=dict(color=clrs[_], line=dict(width=width)),
+                              orientation=orientation,
+                              opacity=kwargs['opacity'] if 'opacity' in kwargs else .8,
+                              histnorm=histnorm)
 
-                _data = Scatter3d(x=df[x].values.tolist(), y=df[y].values.tolist(), z=df[z].values.tolist(), mode=mode,
-                                  text=keys,
-                                  marker=dict(color=colors, symbol=symbol, size=size, opacity=.8))
-                if text:
-                    _data.update(text=keys)
-                data.append(_data)
+                    __['marker'] = get_marker(__['marker'])
 
-            elif kind == 'pie':
-                if not labels:
-                    raise CufflinksError('Missing: labels')
-                if not values:
-                    raise CufflinksError('Missing: values')
-                labels = self[labels].values.tolist()
-                values = self[values].values.tolist()
-                marker = dict(colors=get_colors(colors, colorscale, labels, asList=True))
-                marker.update(line=dict(color=kwargs.pop('linecolor', None), width=kwargs.pop('linewidth', width)))
-                pie = dict(values=values, labels=labels, name='', marker=marker)
+                    if orientation == 'h':
+                        __['y'] = __['x']
+                        del __['x']
+                    __ = Histogram(__)
+                    if bins:
+                        if type(bins) in (tuple, list):
+                            try:
+                                _bins = {'start': bins[0], 'end': bins[1], 'size': bins[2]}
+                                if orientation == 'h':
+                                    __.update(ybins=_bins, autobiny=False)
+                                else:
+                                    __.update(xbins=_bins, autobinx=False)
+                            except:
+                                print("Invalid format for bins generation")
+                        else:
+                            if orientation == 'h':
+                                __.update(nbinsy=bins)
+                            else:
+                                __.update(nbinsx=bins)
+                data.append(__)
 
-                kw = check_kwargs(kwargs, PIE_KWARGS)
-                kw['textfont'] = {'color': kw.pop('textcolor', None)}
-                pie.update(kw)
-                data = []
-                del layout['xaxis']
-                del layout['yaxis']
-                data.append(Pie(pie))
-                validate = False
-
-            elif kind in ('old_candle', 'old_ohlc'):
-                d = ta._ohlc_dict(self)
-                if len(list(d.keys())) != 4:
-                    raise Exception("OHLC type of charts require an Open, High, Low and Close column")
-                ohlc_kwargs = check_kwargs(kwargs, OHLC_KWARGS)
-                if kind == 'old_candle':
-                    fig = tools.get_candle(self, theme=theme, layout=layout, **ohlc_kwargs)
+        elif kind in ('heatmap', 'surface'):
+            if x:
+                x = self[x].values.tolist()
+            else:
+                if self.index.__class__.__name__ in ('PeriodIndex', 'DatetimeIndex'):
+                    x = self.index.format()
                 else:
-                    fig = tools.get_ohlc(self, theme=theme, layout=layout, **ohlc_kwargs)
-                if bestfit:
-                    df = self.copy()
-                    bf = _to_iplot(self[d['close']], bestfit=True, bestfit_colors=bestfit_colors, asTimestamp=True)
-                    fig['data'].append(bf[1])
-                data = fig['data']
-                layout = fig['layout']
+                    x = self.index.values.tolist()
+            y = self[y].values.tolist() if y else self.columns.values.tolist()
+            z = self[z].values.tolist() if z else self.values.transpose()
+            scale = get_scales('rdbu') if not colorscale else get_scales(colorscale)
+            scale = [normalize(_) for _ in scale]
+            colorscale = [[float(_) / (len(scale) - 1), scale[_]] for _ in range(len(scale))]
+            center_scale = kwargs.get('center_scale', None)
 
-            elif kind in ('candle', 'ohlc', 'candlestick'):
-                kind = 'candlestick' if kind == 'candle' else kind
-                kw = check_kwargs(kwargs, OHLC_KWARGS)
-                d = ta._ohlc_dict(self, validate='ohlc', **kw)
-                _d = dict(type=kind,
-                          open=self[d['open']].values.tolist(),
-                          high=self[d['high']].values.tolist(),
-                          low=self[d['low']].values.tolist(),
-                          close=self[d['close']].values.tolist())
-                if isinstance(self.index, pd.core.indexes.datetimes.DatetimeIndex):
-                    _d['x'] = self.index.astype('str')
+            if is_list(z):
+                zmin = min(z)
+                zmax = max(z)
+            else:
+                zmin = z.min()
+                zmax = z.max()
+
+            if center_scale is not None:
+                if center_scale <= zmin + (zmax - zmin) / 2:
+                    zmin = center_scale * 2 - zmax
                 else:
-                    _d['x'] = self.index
-                if 'name' in kw:
-                    _d['name'] = kw['name']
+                    zmax = center_scale * 2 - zmin
+            zmin = kwargs.get('zmin', zmin)
+            zmax = kwargs.get('zmax', zmax)
+            if kind == 'heatmap':
+                data = [Heatmap(z=z, x=x, y=y, zmin=zmin, zmax=zmax, colorscale=colorscale)]
+            else:
+                data = [Surface(z=z, x=x, y=y, colorscale=colorscale)]
 
-                showlegend = False
-                if 'showlegend' in kwargs:
-                    showlegend = kwargs['showlegend']
+        elif kind in ('scatter3d', 'bubble3d'):
+            data = []
+            keys = self[text].values if text else list(range(len(self)))
+            colors = get_colors(colors, colorscale, keys, asList=True)
+            mode = 'markers' if 'markers' not in mode else mode
+            df = self.copy()
+            df['index'] = keys
+            if kind == 'bubble3d':
+                rg = self[size].values
+                if not kwargs.get('abs_size', False):
+                    size = [int(100 * (float(_) - rg.min()) / (rg.max() - rg.min())) + 12 for _ in rg]
                 else:
-                    if 'legend' in kwargs:
-                        if type(kwargs['legend']) == bool:
-                            showlegend = kwargs['legend']
-                # https://github.com/santosjorge/cufflinks/issues/113
-                # _d['increasing']=dict(line=dict(color=kw['up_color']) if 'up_color' in kw else dict(),showlegend=showlegend)
-                # _d['decreasing']=dict(line=dict(color=kw['down_color']) if 'down_color' in kw else dict(),showlegend=showlegend)
-                _d['increasing'] = dict(line=dict(color=kw['up_color']) if 'up_color' in kw else dict())
-                _d['decreasing'] = dict(line=dict(color=kw['down_color']) if 'down_color' in kw else dict())
-                for k in ('increasing', 'decreasing'):
-                    if k in kw:
-                        _d[k] = deep_update(_d[k], kw[k])
+                    size = rg
+            else:
+                size = [size for _ in range(len(keys))]
 
-                _d['showlegend'] = showlegend
-                _d['yaxis'] = 'y2'
-                data = [_d]
+            _data = Scatter3d(x=df[x].values.tolist(), y=df[y].values.tolist(), z=df[z].values.tolist(), mode=mode,
+                              text=keys,
+                              marker=dict(color=colors, symbol=symbol, size=size, opacity=.8))
+            if text:
+                _data.update(text=keys)
+            data.append(_data)
 
+        elif kind == 'pie':
+            if not labels:
+                raise BlotError('Missing: labels')
+            if not values:
+                raise BlotError('Missing: values')
+            labels = self[labels].values.tolist()
+            values = self[values].values.tolist()
+            marker = dict(colors=get_colors(colors, colorscale, labels, asList=True))
+            marker.update(line=dict(color=kwargs.pop('linecolor', None), width=kwargs.pop('linewidth', width)))
+            pie = dict(values=values, labels=labels, name='', marker=marker)
 
+            kw = check_kwargs(kwargs, PIE_KWARGS)
+            kw['textfont'] = {'color': kw.pop('textcolor', None)}
+            pie.update(kw)
+            data = []
+            del layout['xaxis']
+            del layout['yaxis']
+            data.append(Pie(pie))
+            validate = False
 
-            elif kind in ('choropleth', 'scattergeo'):
-                kw = check_kwargs(kwargs, GEO_KWARGS)
-                if kind == 'choropleth':
-                    if not all([x != None for x in (locations, z)]):
-                        raise Exception("Choropleth maps require a 'location' and 'z' column names specified")
-                    geo_data = {'type': 'choropleth', 'locations': self[locations], 'z': self[z],
-                                'colorscale': get_colorscale(colorscale),
-                                'marker': get_marker(dict(line=dict(width=width)))}
-                elif kind == 'scattergeo':
-                    if not all([x != None for x in (lon, lat)]):
-                        raise Exception("Scattergeo maps require a 'lon' and 'lat' column names specified")
-                    geo_data = {'type': 'scattergeo', 'lat': self[lat], 'lon': self[lon],
-                                'marker': get_marker(dict(line=dict(width=width),
-                                                          symbol=symbol, colorscale=get_colorscale(colorscale),
-                                                          color=self[z] if z else None))}
-                if 'colorbar' in kwargs:
-                    geo_data['colorbar'] = kwargs['colorbar']
-                geo_data.update(kw)
-                if text:
-                    geo_data.update(text=self[text])
-                validate = False
-                data = []
-                data.append(geo_data)
+    filename = title or 'blot-chart'
 
-            # Figure Factory
-            elif kind in ('distplot'):
-                colors = get_colors(colors, colorscale, self.keys(), asList=True)
-                hist_data = self.transpose().values
-                kw = check_kwargs(kwargs, FF_DISTPLOT)
-                group_labels = kw.pop('group_labels', self.columns)
-                if histnorm:
-                    kw['histnorm'] = histnorm
-                fig = ff.create_distplot(hist_data=hist_data, group_labels=group_labels,
-                                         colors=colors, **kw).to_dict()
-                data = fig['data']
-                layout = tools.merge_dict(layout, fig['layout'])
-            elif kind in ('violin'):
-                df = pd.DataFrame(self) if type(self) == pd.core.series.Series else self.copy()
-                kw = check_kwargs(kwargs, FF_VIOLIN)
-                kw['rugplot'] = kw.pop('show_rug', True)
-                kw['title'] = title
-                if 'group_header' not in kw:
-                    kw['group_header'] = categories if categories else None
-                categories = kw.get('group_header')
-                colors = get_colors(colors, colorscale,
-                                    df[categories].value_counts().values if categories else df.keys(), asList=True)
-                kw['colors'] = colors
-                if categories:
-                    for _ in range(2, df[categories].value_counts().size + 1):
-                        layout['xaxis{0}'.format(_)] = layout['xaxis'].copy()
-                    if categories not in df:
-                        raise CufflinksError('Column "{0}" not found in DataFrame'.format(categories))
-                    elif len(df.columns) == 1:
-                        raise CufflinksError(
-                            'When "categories" are specified, two columns are expected. \n Only one column was found.')
-                    elif len(df.columns) == 2:
-                        cols = list(df.columns)
-                        cols.remove(categories)
-                        kw['data_header'] = cols[0]
-                    else:
-                        if 'data_header' not in kw:
-                            raise CufflinksError(
-                                'data_header must be the column name with the desired numeric data for the violin plot.')
-                else:
-                    if len(df.columns) == 1:
-                        kw['data_header'] = df.columns[0]
-                    elif len(df.columns) > 1:
-                        if 'data_header' not in kw:
-                            raise CufflinksError(
-                                'data_header must be the column name with the desired numeric data for the violin plot.')
-                fig = ff.create_violin(df, **kw).to_dict()
-                data = fig['data']
-                layout = tools.merge_dict(layout, fig['layout'])
-
-    filename = filename or title or 'Plotly Playground {0}'.format(time.strftime("%Y-%m-%d %H:%M:%S"))
-
-    # Figure define
     figure = {
         'data': data, 'layout': layout
     }
 
     # Check secondary axis
-    if secondary_y:
-        figure = tools._set_axis(figure, secondary_y, side='right')
-        if secondary_y_title:
-            figure.layout.yaxis2.title = secondary_y_title
-
-    # Error Bars
-    if kind in ('scatter', 'bar', 'barh', 'lines', 'line'):
-        if any([error_x, error_y]):
-            def set_error(axis, **kwargs):
-                return tools.set_errors(figure, axis=axis, **kwargs)
-
-            kw = check_kwargs(kwargs, ERROR_KWARGS)
-            kw = dict([(k.replace('error_', ''), v) for k, v in list(kw.items())])
-            kw['type'] = error_type
-            if error_x:
-                kw['values'] = error_x
-                figure = set_error('x', **kw)
-            if error_y:
-                kw['values'] = error_y
-                figure = set_error('y', **kw)
+    if y2:
+        figure = tools._set_axis(figure, y2, side='right')
+        if y2title:
+            figure.layout.yaxis2.title = y2title
 
     # Subplots
     if subplots:
@@ -1202,7 +934,6 @@ def _iplot(
     else:
         return iplot(
             figure, validate=validate, filename=filename,
-            as_image=as_image, as_url=as_url, as_plot=as_plot,
             dimensions=dimensions
         )
 
@@ -1311,9 +1042,7 @@ def _layout(self, **kwargs):
 # py_offline.plot(figure,show_link,link_text,validate,output_type,include_plotlyjs,filename,auto_open,image,image_filename,image_width,image_height,config)
 
 
-def iplot(figure, validate=True, filename='',
-          as_image=False, as_url=False, as_plot=False,
-          dimensions=None, **kwargs):
+def iplot(figure, validate=True, filename='', as_url=False, as_plot=False, dimensions=None, **kwargs):
     """
     Plots a figure in IPython, creates an HTML or generates an Image
 
@@ -1379,7 +1108,7 @@ def iplot(figure, validate=True, filename='',
         figure['layout'].update(showlegend=kwargs['legend'])
 
     # Filename Handling
-    filename = filename or 'Plotly Playground {0}'.format(time.strftime("%Y-%m-%d %H:%M:%S"))
+    filename = filename or 'blot-chart'
 
     # Dimensions
     dimensions = dimensions or (800, 500)
@@ -1387,26 +1116,6 @@ def iplot(figure, validate=True, filename='',
     # Remove validation if shapes are present
     if 'layout' in figure:
         validate = False if 'shapes' in figure['layout'] else validate
-
-    # asURL
-    auto_open = True
-    if as_url:
-        as_plot = True
-        auto_open = False
-
-    if as_image:
-        return offline.py_offline.iplot(
-            figure, validate=validate, filename=filename,
-            image='png', image_width=dimensions[0], image_height=dimensions[1],
-        )
-
-    # asPlot and asUrl
-    if as_plot:
-        filename += '.html'
-        return offline.py_offline.plot(
-            figure, filename=filename, validate=validate,
-            auto_open=auto_open
-        )
 
     # iplot
     return offline.py_offline.iplot(

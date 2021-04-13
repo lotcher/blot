@@ -1,2 +1,2 @@
-class CufflinksError(Exception):
+class BlotError(Exception):
     pass

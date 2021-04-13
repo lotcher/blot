@@ -14,10 +14,9 @@ from IPython.display import HTML, display
 
 from .utils import inverseDict
 from .auth import get_config_file
+from .exceptions import BlotError
 
 
-class CufflinksError(Exception):
-    pass
 
 
 def to_rgba(color, alpha):
@@ -99,7 +98,7 @@ def normalize(color):
         try:
             return normalize(cnames[color.lower()])
         except:
-            raise CufflinksError('Not a valid color: ' + color)
+            raise BlotError('Not a valid color: ' + color)
 
 
 def rgb_to_hex(color):

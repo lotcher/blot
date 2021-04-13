@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from .auth import get_config_file
-from .exceptions import CufflinksError
+from .exceptions import BlotError
 
 
 def scattergeo():
@@ -404,7 +404,7 @@ def getName(n=1, name=3, exchange=2, columns=None, mode='abc'):
         if isinstance(columns, str):
             columns = [columns]
         if n != len(columns):
-            raise CufflinksError("Length of column names needs to be the \n"
+            raise BlotError("Length of column names needs to be the \n"
                                  "same length of traces")
     else:
         if mode is None:
@@ -434,5 +434,5 @@ def getName(n=1, name=3, exchange=2, columns=None, mode='abc'):
             columns = [''.join(np.random.choice(list(string.ascii_uppercase), name)) + '.' + ''.join(
                 np.random.choice(list(string.ascii_uppercase), exchange)) for _ in range(n)]
         else:
-            raise CufflinksError("Unknown mode: {0}".format(mode))
+            raise BlotError("Unknown mode: {0}".format(mode))
     return columns
