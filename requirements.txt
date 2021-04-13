@@ -1,6 +1,7 @@
 numpy>=1.9.2
 pandas>=0.19.2
-plotly>=4.1.1
+plotly>=4.9
+kaleido>=0.2.1
 six>=1.9.0
 colorlover>=0.2.1
 setuptools>=34.4.1

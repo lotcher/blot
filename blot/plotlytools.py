@@ -1390,3 +1390,5 @@ pd.Series.figure = _figure
 pd.Series.to_iplot = _to_iplot
 pd.Series.blot = _iplot
 Figure.iplot = _fig_iplot
+
+Figure.save = Figure.write_image
