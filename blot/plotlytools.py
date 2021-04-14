@@ -475,131 +475,114 @@ def _iplot(
 
     ==========Other Kwargs===================
         Line, Scatter
-            connectgaps : bool
-                If True, empty values are connected
+            connectgaps : bool=False
+               折线图中空值是否连接
+
+        ------------------------------------
+
         Pie charts
             sort : bool=True
-                If True it sorts the labels by value
-            pull : float [0-1]
-                Pulls the slices from the centre
-            hole : float [0-1]
-                Sets the size of the inner hole
-            linecolor : string
-                Sets the color for the contour line of the slices
-            linewidth : string
-                Sets the width for the contour line of the slices
-            textcolor : string
-                Sets the color for the text in the slices
-            textposition : string
-                Sets the position of the legends for each slice
-                    outside
-                    inner
-            textinfo : string
-                Sets the information to be displayed on
-                the legends
-                    label
-                    percent
-                    value
-                    * or ony combination of the above using
-                      '+' between each item
-                      ie 'label+percent'
+                legend中各label是否按照占比排序
 
-        Histogram
-            linecolor : string
-                specifies the line color of the histogram
+            pull : float [0-1] or list(float)
+                    float：每块离中心的距离，默认为0
+                    list：按顺序指定每个块离中心的距离
+                饼图中块距离中心点的距离
+
+            hole : float [0-1]
+                饼图中心孔的尺寸，默认为0
+
+            textcolor : string
+                饼图中显示的文字颜色，默认自适应（深色背景浅色字体，浅色背景深色背景）
+
+            textposition : string or list（string）
+                饼图中的文字显示的位置 ['inside', 'outside', 'auto', 'none']
+
+            textinfo : string
+                饼图中文字显示的信息，默认为percent
+                可以为['label', 'text', 'value', 'percent']中的一个
+                或者多个用'+'连接的字符串，eg. 'label+value'
+
+        ------------------------------------
 
         Heatmap and Surface
-            center_scale : float
-                Centers the colorscale at a specific value
-                Automatically sets the (zmin,zmax) values
+            center_value : float
+                指定热力图scale的中心取值
+                如果不指定，将自动从(zmin,zmax)中计算
+
             zmin : float
-                Defines the minimum range for the z values.
-                This affects the range for the colorscale
+                指定计算colorscale最小的取值。eg. zmin=0.5, 则z<=0.5的颜色均为colorscale的起始颜色
+                会影响到整个colorscale range
+
             zmax : float
-                Defines the maximum range for the z values.
-                This affects the range for the colorscale
+                 指定计算colorscale最大的取值
+                 会影响到整个colorscale range
+
+        ------------------------------------
 
         Subplots
             horizontal_spacing : float [0,1]
-                Space between subplot columns.
+                多个水平子图之间的距离，列间距
+
             vertical_spacing : float [0,1]
-                Space between subplot rows.
-            subplot_titles : bool
-                If True, chart titles are plotted
-                at the top of each subplot
-            shared_xaxes : bool
-                Assign shared x axes.
-                If True, subplots in the same grid column have one common
-                shared x-axis at the bottom of the grid.
+                多个竖直子图之间的距离，行间距
+
+            subplot_titles : bool=False
+                是否显示每个子图的title（默认使用legend信息）
+
+            shared_xaxes、shared_xaxis : bool
+                子图间是否共享x轴
+
             shared_yaxes : bool
-                Assign shared y axes.
-                If True, subplots in the same grid row have one common
-                shared y-axis on the left-hand side of the grid.
+                子图间是否共享y轴
+
+        ------------------------------------
 
         Shapes
             hpsans : tuple(y0,y1) or list(tuple)
                 填充水平（平行于y轴）区域，y0,y1表示区域的起始和结束纵坐标。可以用list传入多个
+
             vspans : tuple(x0,x1) or list(tuple)
                 填充竖直（平行于x轴）区域，y0,y1表示区域的起始和结束纵坐标。可以用list传入多个
+
             shapes : dict or list(dict)
-                List of dictionaries with the
-                specifications of a given shape.
-                See help(blot.tools.get_shape)
-                for more information
+                plotly中的shape属性字典.具体参照https://plotly.com/python/shapes/#vertical-and-horizontal-lines-positioned-relative-to-the-axis-data
+                eg. {"type":"rect", 'x0':1, 'y0':1, 'x1':2, 'y1':3}则绘制一个长方形框
+
+        ------------------------------------
 
         Axis Ranges
             xrange : [lower_bound,upper_bound]
-                Sets the range for the x axis
+                指定x轴取值范围
+
             yrange : [lower_bound,upper_bound]
-                Sets the range for the y axis
+                指定y轴取值范围
+
             zrange : [lower_bound,upper_bound]
-                Sets the range for the z axis
+                指定z轴取值范围
 
-        Explicit Layout Updates
-            layout_update : dict
-                The layout will be modified with all
-                the explicit values stated in the
-                dictionary.
-                It will not apply if layout is passed
-                as parameter.
-
-
-        Range Selector
-            rangeselector : dict
-                Defines a rangeselector object
-                see help(cf.tools.get_range_selector) for more information
-                Example:
-                    {'steps':['1y','2 months','5 weeks','ytd','2mtd'],
-                     'axis':'xaxis', 'bgcolor' : ('blue',.3),
-                     'x': 0.2 , 'y' : 0.9}
+        ------------------------------------
 
         Range Slider
             rangeslider : bool or dict
-                Defines if a rangeslider is displayed
-                If bool:
-                    True : Makes it visible
-                if dict:
-                    Rangeslider object
-                Example:
-                    {'bgcolor':('blue',.3),'autorange':True}
+                    bool: 默认False, 如果为True，将展示默认的range slider
+                    dict: 具体参照plotly文档：https://plotly.com/python/range-slider/
+                        eg.  {'bgcolor':('blue',.3),'autorange':True}
+                展示range slider
+
+        ------------------------------------
 
         Annotations
             fontcolor : str
-                Text color for annotations
-            fontsize : int
-                Text size for annotations
-            textangle : int
-                Text angle
-            See https://plot.ly/python/reference/#layout-annotations
-            for a complete list of valid parameters.
+                注解文字颜色
 
-        Exports
-            display_image : bool
-                If True then the image if displayed after being saved
-                ** only valid if asImage=True
-            scale : integer
-                Increase the resolution of the image by `scale` amount
-                Only valid when asImage=True
+            fontsize : int
+                注解文字大小
+
+            textangle : int=0
+                注解文字方向
+            完成注解相关配置参考：https://plot.ly/python/reference/#layout-annotations
+
     """
     # Valid Kwargs
     valid_kwargs = [
@@ -608,7 +591,7 @@ def _iplot(
     ]
     BUBBLE_KWARGS = ['abs_size']
     TRACE_KWARGS = ['hoverinfo', 'connectgaps']
-    HEATMAP_SURFACE_KWARGS = ['center_scale', 'zmin', 'zmax']
+    HEATMAP_SURFACE_KWARGS = ['center_value', 'zmin', 'zmax']
     PIE_KWARGS = ['sort', 'pull', 'hole', 'textposition', 'textinfo', 'linecolor', 'linewidth', 'textcolor']
     OHLC_KWARGS = [
         'up_color', 'down_color', 'open', 'high', 'low', 'close',
@@ -851,7 +834,7 @@ def _iplot(
             scale = get_scales('rdbu') if not colorscale else get_scales(colorscale)
             scale = [normalize(_) for _ in scale]
             colorscale = [[float(_) / (len(scale) - 1), scale[_]] for _ in range(len(scale))]
-            center_scale = kwargs.get('center_scale', None)
+            center_value = kwargs.get('center_value', None)
 
             if is_list(z):
                 zmin = min(z)
@@ -860,11 +843,11 @@ def _iplot(
                 zmin = z.min()
                 zmax = z.max()
 
-            if center_scale is not None:
-                if center_scale <= zmin + (zmax - zmin) / 2:
-                    zmin = center_scale * 2 - zmax
+            if center_value is not None:
+                if center_value <= zmin + (zmax - zmin) / 2:
+                    zmin = center_value * 2 - zmax
                 else:
-                    zmax = center_scale * 2 - zmin
+                    zmax = center_value * 2 - zmin
             zmin = kwargs.get('zmin', zmin)
             zmax = kwargs.get('zmax', zmax)
             if kind == 'heatmap':
