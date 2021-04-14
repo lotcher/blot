@@ -19,7 +19,7 @@ __LAYOUT_VALID_KWARGS = [
     'xrange', 'yrange', 'zrange', 'rangeselector', 'rangeslider', 'showlegend', 'fontfamily'
 ]
 
-__SHAPES_KWARGS = ['vline', 'hline', 'shapes', 'hspan', 'vspan']
+__SHAPES_KWARGS = ['vline', 'hline', 'shapes', 'hspan', 'vspan','vspans','hspans']
 
 __GEO_KWARGS = [
     'projection', 'showframe', 'showlakes', 'coastlinecolor', 'countrywidth', 'countrycolor',

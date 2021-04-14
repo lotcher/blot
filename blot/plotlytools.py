@@ -36,7 +36,7 @@ def dict_to_iplot(d):
 
 
 def _to_iplot(self, colors=None, colorscale=None, kind='scatter', mode='lines', interpolation='linear', symbol='dot',
-              size='12', fill=False,
+              size='12', fill=None, fillcolor=None,
               width=3, dash='solid', sortbars=False, keys=None, bestfit=False, bestfit_colors=None, opacity=0.6,
               asDates=False, asTimestamp=False, text=None, **kwargs):
     """
@@ -141,7 +141,7 @@ def _to_iplot(self, colors=None, colorscale=None, kind='scatter', mode='lines', 
     mode = get_items_as_list(mode, keys, 'mode')
     interpolation = get_items_as_list(interpolation, keys, 'interpolation')
     width = get_items_as_list(width, keys, 'width')
-    for key in keys:
+    for i, key in enumerate(keys):
         lines[key] = {}
         lines[key]["x"] = x
         lines[key]["y"] = df[key].fillna('').values
@@ -157,8 +157,29 @@ def _to_iplot(self, colors=None, colorscale=None, kind='scatter', mode='lines', 
             if 'marker' in mode[key]:
                 lines[key]["marker"] = dict(symbol=symbol[key], size=size)
             if fill:
-                lines[key]["fill"] = 'tonexty' if kind == 'area' else 'tozeroy'
-                lines[key]["fillcolor"] = to_rgba(colors[key], kwargs['opacity'] if 'opacity' in kwargs else .3)
+                def current_fill():
+                    if isinstance(fill, bool):
+                        return 'tonexty' if kind == 'area' else 'tozeroy'
+                    elif isinstance(fill, list):
+                        return fill[i]
+                    elif isinstance(fill, dict):
+                        return fill.get(key, 'tonexty')
+                    else:
+                        return fill
+
+                def current_fillcolor():
+                    default = to_rgba(colors[key], kwargs.get('opacity', 0.3))
+                    if isinstance(fillcolor, str):
+                        return fillcolor
+                    elif isinstance(fillcolor, list):
+                        return fillcolor[i]
+                    elif isinstance(fillcolor, dict):
+                        return fillcolor.get(key, default)
+                    else:
+                        return default
+
+                lines[key]["fill"] = current_fill()
+                lines[key]["fillcolor"] = current_fillcolor()
     if 'bar' in kind:
         lines_plotly = [Bar(lines[key]).to_plotly_json() for key in keys]
     else:
@@ -197,7 +218,7 @@ def _iplot(
 
         title='', xtitle='', ytitle='', y2title='', ztitle='',
 
-        theme=None, colors=None, colorscale=None, fill=False, width=None,
+        theme=None, colors=None, colorscale=None, fill=None, fillcolor=None, width=None,
         dash='solid', mode='', interpolation='linear', symbol='circle', size=12,
 
         barmode='', bargap=None, bargroupgap=None, bins=None, histnorm='', boxpoints=False,
@@ -304,8 +325,18 @@ def _iplot(
             仅当未设置colors参数时有效
             在blot.colors.scales()查看有效色阶名称
 
-        fill : bool
-            是否填充曲线
+        fill : bool, str, list or dict
+                bool: False不填充。True：'tozeroy' if kind=='area' else 'tonexty'
+                str: 填充方式，取值列表：( "none" | "tozeroy" | "tozerox" | "tonexty" | "tonextx" | "toself" | "tonext" )
+                list：单独为每条曲线指定填充方式
+                dict：同上，key of keys
+            填充曲线的方式，具体参数含义参照https://plotly.com/python/reference/scatter/#scatter-fill
+
+        fillcolor : str, list or dict
+                str: 填充颜色，和color方式一样。hex(e.g. '#ff0000')、rgb/rgba(e.g. 'rgba(255,0,0,0.8)')、css color name……
+                list：单独为每条曲线指定填充颜色
+                dict：同上，key of keys
+            曲线填充的颜色控制
 
         width : dict, list or int
                 int : 应用于所有曲线
@@ -413,7 +444,7 @@ def _iplot(
             需要绘制垂直（平行于y轴）参考线的x取值列表
 
         hlines: list
-            需要绘制水平（平行于x轴）参考线的x取值列表
+            需要绘制水平（平行于x轴）参考线的y取值列表
 
         ------------------------------------
 
@@ -506,26 +537,10 @@ def _iplot(
                 shared y-axis on the left-hand side of the grid.
 
         Shapes
-            hline : float, list or dict
-                Draws a horizontal line at the
-                indicated y position(s)
-                Extra parameters can be passed in
-                the form of a dictionary (see shapes)
-            vline : float, list or dict
-                Draws a vertical line at the
-                indicated x position(s)
-                Extra parameters can be passed in
-                the form of a dictionary (see shapes)
-            hpsan : (y0,y1)
-                Draws a horizontal rectangle at the
-                indicated (y0,y1) positions.
-                Extra parameters can be passed in
-                the form of a dictionary (see shapes)
-            vspan : (x0,x1)
-                Draws a vertical rectangle at the
-                indicated (x0,x1) positions.
-                Extra parameters can be passed in
-                the form of a dictionary (see shapes)
+            hpsans : tuple(y0,y1) or list(tuple)
+                填充水平（平行于y轴）区域，y0,y1表示区域的起始和结束纵坐标。可以用list传入多个
+            vspans : tuple(x0,x1) or list(tuple)
+                填充竖直（平行于x轴）区域，y0,y1表示区域的起始和结束纵坐标。可以用list传入多个
             shapes : dict or list(dict)
                 List of dictionaries with the
                 specifications of a given shape.
@@ -713,7 +728,7 @@ def _iplot(
                 if not isinstance(text, list):
                     text = self[text].values
             data = df.to_iplot(colors=colors, colorscale=colorscale, kind=kind, interpolation=interpolation,
-                               fill=fill, width=width, dash=dash, keys=keys,
+                               fill=fill, fillcolor=fillcolor, width=width, dash=dash, keys=keys,
                                asDates=False, mode=mode, symbol=symbol, size=size,
                                text=text, **kwargs)
             trace_kw = check_kwargs(kwargs, TRACE_KWARGS)
@@ -1042,7 +1057,7 @@ def _layout(self, **kwargs):
 # py_offline.plot(figure,show_link,link_text,validate,output_type,include_plotlyjs,filename,auto_open,image,image_filename,image_width,image_height,config)
 
 
-def iplot(figure, validate=True, filename='', as_url=False, as_plot=False, dimensions=None, **kwargs):
+def iplot(figure, validate=True, filename='', dimensions=None, **kwargs):
     """
     Plots a figure in IPython, creates an HTML or generates an Image
 
