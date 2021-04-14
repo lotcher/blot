@@ -2,19 +2,15 @@ import pandas as pd
 import time
 import copy
 import numpy as np
-# from plotly.graph_objs import *
 from plotly.graph_objs import Figure, Layout, Bar, Box, Scatter, FigureWidget, Scatter3d, Histogram, Heatmap, Surface, \
     Pie
-import plotly.figure_factory as ff
 from collections import defaultdict
-from IPython.display import display, Image
 from .exceptions import BlotError
 from .colors import normalize, get_scales, colorgen, to_rgba, get_colorscale
 from .utils import check_kwargs, deep_update, kwargs_from_keyword, is_list
 from . import tools
 from . import offline
 from . import auth
-from . import ta
 
 __TA_KWARGS = ['min_period', 'center', 'freq', 'how', 'rsi_upper', 'rsi_lower', 'boll_std', 'fast_period',
                'slow_period', 'signal_period', 'initial', 'af', 'open', 'high', 'low', 'close']
@@ -36,7 +32,7 @@ def dict_to_iplot(d):
 
 
 def _to_iplot(self, colors=None, colorscale=None, kind='scatter', mode='lines', interpolation='linear', symbol='dot',
-              size='12', fill=None, fillcolor=None,
+              size='12', fill=None, fillcolor=None, showlegend=None,
               width=3, dash='solid', sortbars=False, keys=None, bestfit=False, bestfit_colors=None, opacity=0.6,
               asDates=False, asTimestamp=False, text=None, **kwargs):
     """
@@ -146,6 +142,19 @@ def _to_iplot(self, colors=None, colorscale=None, kind='scatter', mode='lines', 
         lines[key]["x"] = x
         lines[key]["y"] = df[key].fillna('').values
         lines[key]["name"] = str(key)
+
+        def current_legend():
+            if isinstance(showlegend, bool):
+                return showlegend
+            elif isinstance(fillcolor, list):
+                return showlegend[i] if i < len(showlegend) else True
+            elif isinstance(fillcolor, dict):
+                return fillcolor.get(key, True)
+            else:
+                return True
+
+        lines[key]['showlegend'] = current_legend()
+
         if text is not None:
             lines[key]["text"] = text
         if 'bar' in kind:
@@ -223,7 +232,7 @@ def _iplot(
 
         barmode='', bargap=None, bargroupgap=None, bins=None, histnorm='', boxpoints=False,
 
-        orientation='v', annotations=None, vlines=None, hlines=None,
+        orientation='v', annotations=None, showlegend=True, vlines=None, hlines=None,
 
         gridcolor=None, zerolinecolor=None, margin=None, dimensions=None, subplots=False, as_figure=True, **kwargs
 ):
@@ -357,7 +366,7 @@ def _iplot(
         mode : dict, list or string
                 string : 应用于所有曲线
                 list : 按照顺序应用在各条曲线
-                dict: {column:value} 为每条曲线单独指定线宽
+                dict: {column:value} 为每条曲线单独指定模式
             散点图下绘制模式
                 markers「默认」
                 lines：连线。和kind='line'效果相同
@@ -381,7 +390,7 @@ def _iplot(
                 circle-dot：空心圆点
                 diamond：菱形
                 square：正方形
-                ………可参照plotly scatter symbol查看更多有效值
+                ………可参照https://plotly.com/python/reference/scatter/#scatter-marker-symbol查看更多有效值
 
         size : string or int
             散点大小
@@ -712,7 +721,7 @@ def _iplot(
                     text = self[text].values
             data = df.to_iplot(colors=colors, colorscale=colorscale, kind=kind, interpolation=interpolation,
                                fill=fill, fillcolor=fillcolor, width=width, dash=dash, keys=keys,
-                               asDates=False, mode=mode, symbol=symbol, size=size,
+                               asDates=False, mode=mode, symbol=symbol, size=size, showlegend=showlegend,
                                text=text, **kwargs)
             trace_kw = check_kwargs(kwargs, TRACE_KWARGS)
             for trace in data:
