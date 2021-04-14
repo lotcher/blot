@@ -161,7 +161,7 @@ def _to_iplot(self, colors=None, colorscale=None, kind='scatter', mode='lines', 
                     if isinstance(fill, bool):
                         return 'tonexty' if kind == 'area' else 'tozeroy'
                     elif isinstance(fill, list):
-                        return fill[i]
+                        return fill[i] if i < len(fill) else 'none'
                     elif isinstance(fill, dict):
                         return fill.get(key, 'tonexty')
                     else:
@@ -172,7 +172,7 @@ def _to_iplot(self, colors=None, colorscale=None, kind='scatter', mode='lines', 
                     if isinstance(fillcolor, str):
                         return fillcolor
                     elif isinstance(fillcolor, list):
-                        return fillcolor[i]
+                        return fillcolor[i] if i < len(fillcolor) else default
                     elif isinstance(fillcolor, dict):
                         return fillcolor.get(key, default)
                     else:
