@@ -137,11 +137,37 @@ def _to_iplot(self, colors=None, colorscale=None, kind='scatter', mode='lines', 
     mode = get_items_as_list(mode, keys, 'mode')
     interpolation = get_items_as_list(interpolation, keys, 'interpolation')
     width = get_items_as_list(width, keys, 'width')
+
+    upper, lower = kwargs.get('upper'), kwargs.get('lower')
+    if upper or lower:
+        bounds_color = kwargs.get('bounds_color') or 'rgba(222, 233, 252, 0.7)'
+        config = {
+            'x': x, 'line': {'color': bounds_color},
+            'showlegend': False, 'fillcolor': bounds_color, 'mode': 'lines'
+        }
+        upper_data = df[upper].values if upper in df.columns else [df.max().max()] * len(x)
+        lower_data = df[lower].values if lower in df.columns else [df.min().min()] * len(x)
+        lines.update({
+            '_upper': {'name': '_upper', 'y': upper_data, **config},
+            '_lower': {'name': '_lower', 'y': lower_data, 'fill': 'tonexty', **config}
+        })
+        keys = [k for k in keys if k not in [upper, lower]]
+
     for i, key in enumerate(keys):
         lines[key] = {}
         lines[key]["x"] = x
         lines[key]["y"] = df[key].fillna('').values
         lines[key]["name"] = str(key)
+        if upper or lower:
+            anomaly_color = kwargs.get('anomaly_color') or 'red'
+            y = df[[key]].fillna('')
+            name = f'{key}_anomaly'
+            y['anomaly'] = (df[key] > df['upper']) + (df[key] < df['lower'])
+            y[key][~y['anomaly']] = np.nan
+            lines[name] = {
+                'name': name, 'x': x, 'y': y[key].values,
+                'line': {'color': anomaly_color}, 'showlegend': False
+            }
 
         def current_legend():
             if isinstance(showlegend, bool):
@@ -190,9 +216,9 @@ def _to_iplot(self, colors=None, colorscale=None, kind='scatter', mode='lines', 
                 lines[key]["fill"] = current_fill()
                 lines[key]["fillcolor"] = current_fillcolor()
     if 'bar' in kind:
-        lines_plotly = [Bar(lines[key]).to_plotly_json() for key in keys]
+        lines_plotly = [Bar(lines[key]).to_plotly_json() for key in lines]
     else:
-        lines_plotly = [Scatter(lines[key]).to_plotly_json() for key in keys]
+        lines_plotly = [Scatter(lines[key]).to_plotly_json() for key in lines]
     for trace in lines_plotly:
         if isinstance(trace['name'], pd.Timestamp):
             trace.update(name=str(trace['name']))
@@ -223,12 +249,12 @@ def _to_iplot(self, colors=None, colorscale=None, kind='scatter', mode='lines', 
 def _iplot(
         self, kind='line', data=None, layout=None,
 
-        x='', y='', y2='', z='', labels=None, values=None, text='', keys=None,
+        x='', y='', y2='', z='', labels=None, values=None, text='', keys=None, upper='', lower='',
 
         title='', xtitle='', ytitle='', y2title='', ztitle='',
 
         theme=None, colors=None, colorscale=None, fill=None, fillcolor=None, width=None,
-        dash='solid', mode='', interpolation='linear', symbol='circle', size=12,
+        dash='solid', mode='', interpolation='linear', symbol='circle', size=12, bounds_color=None, anomaly_color='red',
 
         barmode='', bargap=None, bargroupgap=None, bins=None, histnorm='', boxpoints=False,
 
@@ -294,6 +320,12 @@ def _iplot(
         keys : list of columns
             参与绘图的df列名，默认为df.columns
             也可以用作排序，作用类似于df[keys]
+
+        upper : string of columns
+            基带上界列名
+
+        lower : list of columns
+            基带下界列名
 
         ------------------------------------
 
@@ -396,6 +428,12 @@ def _iplot(
             散点大小
                 string：气泡图中气泡大小对应的列名
                 int：散点图中散点的大小，定值
+
+        bounds_color : string
+            基带颜色，格式同color。默认='rgba(222, 233, 252, 0.7)'
+
+        anomaly_color : string
+            异常点颜色，格式同color。默认='red'
 
         ------------------------------------
 
@@ -719,10 +757,13 @@ def _iplot(
             if text:
                 if not isinstance(text, list):
                     text = self[text].values
-            data = df.to_iplot(colors=colors, colorscale=colorscale, kind=kind, interpolation=interpolation,
-                               fill=fill, fillcolor=fillcolor, width=width, dash=dash, keys=keys,
-                               asDates=False, mode=mode, symbol=symbol, size=size, showlegend=showlegend,
-                               text=text, **kwargs)
+            data = df.to_iplot(
+                colors=colors, colorscale=colorscale, kind=kind, interpolation=interpolation,
+                fill=fill, fillcolor=fillcolor, width=width, dash=dash, keys=keys,
+                upper=upper, lower=lower, bounds_color=bounds_color, anomaly_color=anomaly_color,
+                asDates=False, mode=mode, symbol=symbol, size=size, showlegend=showlegend,
+                text=text, **kwargs
+            )
             trace_kw = check_kwargs(kwargs, TRACE_KWARGS)
             for trace in data:
                 trace.update(**trace_kw)
