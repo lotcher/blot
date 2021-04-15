@@ -7,7 +7,7 @@ with io.open(path.join(here, 'requirements.txt'), encoding='utf-8') as f:
     requires = f.read().split()
 
 setup(
-    name='blot',
+    name='blotly',
     version='1.0.0',
     description='基于cufflinks的绘图工具',
     author='bowaer',
