@@ -8,7 +8,7 @@ with io.open(path.join(here, 'requirements.txt'), encoding='utf-8') as f:
 
 setup(
     name='blotly',
-    version='1.0.0',
+    version='1.0.1',
     description='基于cufflinks的绘图工具',
     author='bowaer',
     author_email='cb229435444@outlook.com',

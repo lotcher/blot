@@ -714,6 +714,11 @@ def _iplot(
 
     if not layout:
         l_kwargs = dict([(k, kwargs[k]) for k in tools.__LAYOUT_KWARGS if k in kwargs])
+        for k in ['vspan', 'hspan']:
+            v = l_kwargs.get(k) or l_kwargs.get(k + 's')
+            if v:
+                l_kwargs[k] = v
+
         if annotations:
             ann_kwargs = check_kwargs(kwargs, tools.__ANN_KWARGS, clean_origin=False)
             annotations = tools.get_annotations(self.copy(), annotations, kind=kind, theme=theme, **ann_kwargs)
