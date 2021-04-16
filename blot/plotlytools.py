@@ -162,7 +162,7 @@ def _to_iplot(self, colors=None, colorscale=None, kind='scatter', mode='lines', 
             anomaly_color = kwargs.get('anomaly_color') or 'red'
             y = df[[key]].fillna('')
             name = f'{key}_anomaly'
-            y['anomaly'] = (df[key] > df['upper']) + (df[key] < df['lower'])
+            y['anomaly'] = (df[key] > upper_data) | (df[key] < lower_data)
             y[key][~y['anomaly']] = np.nan
             lines[name] = {
                 'name': name, 'x': x, 'y': y[key].values,
