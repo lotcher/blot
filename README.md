@@ -30,4 +30,4 @@ pd.DataFrame({
     'value2':np.random.randint(0,20,50),
 }).blot(upper='upper', lower='lower',color='blue')
 ```
-![bounds](img/bounds.png)
+![bounds](http://lbj.wiki/static/images/034254c0-bc79-11eb-9928-00163e30ead3.png)
