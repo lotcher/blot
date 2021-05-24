@@ -1,14 +1,14 @@
 from setuptools import setup
 from os import path
-import io
 
-here = path.abspath(path.dirname(__file__))
-with io.open(path.join(here, 'requirements.txt'), encoding='utf-8') as f:
-    requires = f.read().split()
+BASE_DIR = path.dirname(path.abspath(__file__))
+README_DIR = path.join(BASE_DIR, 'README.md')
+with open(path.join(BASE_DIR, 'requirements.txt'), encoding='utf-8') as f:
+    requirements = f.read().split()
 
 setup(
     name='blotly',
-    version='1.0.1',
+    version='1.0.3',
     description='基于cufflinks的绘图工具',
     author='bowaer',
     author_email='cb229435444@outlook.com',
@@ -18,9 +18,12 @@ setup(
     packages=['blot'],
     package_data={'blot': ['../helper/*.json']},
     include_package_data=True,
-    install_requires=requires,
+    install_requires=requirements,
     classifiers=[
         'Programming Language :: Python :: 3',
     ],
-    zip_safe=False
+    zip_safe=False,
+    long_description=open(README_DIR, encoding='utf-8').read(),
+    long_description_content_type='text/markdown',
+    data_files=[README_DIR]
 )
