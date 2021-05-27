@@ -2,13 +2,13 @@ from setuptools import setup
 from os import path
 
 BASE_DIR = path.dirname(path.abspath(__file__))
-README_DIR = path.join(BASE_DIR, 'README.md')
+README_DIR = 'README.md'
 with open(path.join(BASE_DIR, 'requirements.txt'), encoding='utf-8') as f:
     requirements = f.read().split()
 
 setup(
     name='blotly',
-    version='1.0.3',
+    version='1.0.4',
     description='基于cufflinks的绘图工具',
     author='bowaer',
     author_email='cb229435444@outlook.com',
