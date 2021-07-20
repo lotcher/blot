@@ -1430,6 +1430,10 @@ def _fig_iplot(self, validate=True, sharing=None, filename='',
                  dimensions=dimensions, display_image=display_image, **kwargs)
 
 
+def figure_add(self: Figure, other: Figure):
+    return self.add_traces(other.data)
+
+
 pd.DataFrame.to_iplot = _to_iplot
 pd.DataFrame.scatter_matrix = _scatter_matrix
 pd.DataFrame.figure = _figure
@@ -1442,6 +1446,7 @@ pd.Series.ta_plot = _ta_plot
 pd.Series.figure = _figure
 pd.Series.to_iplot = _to_iplot
 pd.Series.blot = _iplot
-Figure.iplot = _fig_iplot
 
+Figure.iplot = _fig_iplot
+Figure.__add__ = figure_add
 Figure.save = Figure.write_image
