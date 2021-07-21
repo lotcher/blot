@@ -756,7 +756,7 @@ def _iplot(
                 _secondary_y = [y2] if not isinstance(y2, list) else y2
                 df = df[_y + _secondary_y + bounds_cols]
             elif y:
-                df = df[y + bounds_cols]
+                df = df[([y] if not isinstance(y, list) else y) + bounds_cols]
             if kind == 'area':
                 df = df.transpose().fillna(0).cumsum().transpose()
             mode = mode or ('lines' if kind != 'scatter' else 'markers')
