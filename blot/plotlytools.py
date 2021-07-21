@@ -746,6 +746,7 @@ def _iplot(
     if not data:
         if kind in ('scatter', 'spread', 'ratio', 'bar', 'barh', 'area', 'line'):
             df = self.copy()
+            bounds_cols = list(filter(bool, [upper, lower]))
             if type(df) == pd.core.series.Series:
                 df = pd.DataFrame({df.name: df})
             if x:
@@ -753,9 +754,9 @@ def _iplot(
             if y and y2:
                 _y = [y] if not isinstance(y, list) else y
                 _secondary_y = [y2] if not isinstance(y2, list) else y2
-                df = df[_y + _secondary_y]
+                df = df[_y + _secondary_y + bounds_cols]
             elif y:
-                df = df[y]
+                df = df[y + bounds_cols]
             if kind == 'area':
                 df = df.transpose().fillna(0).cumsum().transpose()
             mode = mode or ('lines' if kind != 'scatter' else 'markers')
