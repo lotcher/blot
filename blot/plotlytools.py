@@ -260,7 +260,8 @@ def _iplot(
 
         orientation='v', annotations=None, showlegend=True, vlines=None, hlines=None,
 
-        gridcolor=None, zerolinecolor=None, margin=None, dimensions=None, subplots=False, as_figure=True, **kwargs
+        gridcolor=None, zerolinecolor=None, bg_color=None, margin=None, dimensions=None, subplots=False, as_figure=True,
+        **kwargs
 ):
     """
     默认返回plotly Figure对象
@@ -634,7 +635,7 @@ def _iplot(
     # Valid Kwargs
     valid_kwargs = [
         'color', 'opacity', 'column', 'columns', 'labels', 'text', 'world_readable', 'colorbar',
-        'vline_color', 'vline_width', 'hline_color', 'hline_width'
+        'vline_color', 'vline_width', 'hline_color', 'hline_width','bgcolor'
     ]
     BUBBLE_KWARGS = ['abs_size']
     TRACE_KWARGS = ['hoverinfo', 'connectgaps']
@@ -737,6 +738,13 @@ def _iplot(
         vlines or [], direction='vertical',
         color=kwargs.get('vline_color', 'red'), width=kwargs.get('vline_width', 2)
     )
+
+    bg_color = bg_color or kwargs.get('bgcolor')
+    if bg_color:
+        layout['legend']['bgcolor'] = bg_color
+        layout['paper_bgcolor'] = bg_color
+        layout['plot_bgcolor'] = bg_color
+
 
     layout['shapes'] += tools.add_ref_line(
         hlines or [], direction='horizontal',
